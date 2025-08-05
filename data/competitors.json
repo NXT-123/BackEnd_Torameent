@@ -1,0 +1,158 @@
+[
+    {
+        "name": "Team Flash",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển hàng đầu Việt Nam với nhiều thành tích xuất sắc trong các giải đấu quốc tế.",
+        "mail": "teamflash@esport.com"
+    },
+    {
+        "name": "Saigon Phantom",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển trẻ với nhiều tài năng mới nổi trong làng game Việt Nam.",
+        "mail": "saigonphantom@esport.com"
+    },
+    {
+        "name": "MZ Gaming",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển chuyên nghiệp với kinh nghiệm dày dặn trong các giải đấu Counter-Strike.",
+        "mail": "mzgaming@esport.com"
+    },
+    {
+        "name": "Vikings Gaming",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển mạnh trong các game MOBA với phong cách chơi tấn công mạnh mẽ.",
+        "mail": "vikingsgaming@esport.com"
+    },
+    {
+        "name": "EVOS Esports",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển quốc tế với nhiều thành viên từ các quốc gia khác nhau.",
+        "mail": "evosesports@esport.com"
+    },
+    {
+        "name": "RRQ Hoshi",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển hàng đầu Indonesia với nhiều thành tích xuất sắc.",
+        "mail": "rrqhoshi@esport.com"
+    },
+    {
+        "name": "Fnatic",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển quốc tế nổi tiếng với nhiều thành tích xuất sắc trên toàn thế giới.",
+        "mail": "fnatic@esport.com"
+    },
+    {
+        "name": "Team Liquid",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển Bắc Mỹ với nhiều thành tích xuất sắc trong các game khác nhau.",
+        "mail": "teamliquid@esport.com"
+    },
+    {
+        "name": "Cloud9",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển Bắc Mỹ nổi tiếng với nhiều tài năng trẻ.",
+        "mail": "cloud9@esport.com"
+    },
+    {
+        "name": "T1",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển Hàn Quốc với nhiều thành tích xuất sắc trong League of Legends.",
+        "mail": "t1@esport.com"
+    },
+    {
+        "name": "Ice Wolves",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển mạnh trong các giải đấu Counter-Strike với phong cách chơi thận trọng.",
+        "mail": "icewolves@esport.com"
+    },
+    {
+        "name": "Snow Foxes",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển trẻ với nhiều tài năng mới nổi trong làng game.",
+        "mail": "snowfoxes@esport.com"
+    },
+    {
+        "name": "Frost Giants",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển với kinh nghiệm dày dặn trong các giải đấu quốc tế.",
+        "mail": "frostgiants@esport.com"
+    },
+    {
+        "name": "Blizzard",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển mạnh với phong cách chơi tấn công mạnh mẽ.",
+        "mail": "blizzard@esport.com"
+    },
+    {
+        "name": "Team X",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển với nhiều thành tích xuất sắc trong các giải đấu Valorant.",
+        "mail": "teamx@esport.com"
+    },
+    {
+        "name": "Team Y",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển trẻ với nhiều tài năng mới nổi.",
+        "mail": "teamy@esport.com"
+    },
+    {
+        "name": "Team Z",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển với kinh nghiệm dày dặn trong các giải đấu.",
+        "mail": "teamz@esport.com"
+    },
+    {
+        "name": "Team W",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển mạnh với phong cách chơi thận trọng.",
+        "mail": "teamw@esport.com"
+    },
+    {
+        "name": "Dragon Warriors",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển hàng đầu trong các giải đấu Dota 2.",
+        "mail": "dragonwarriors@esport.com"
+    },
+    {
+        "name": "Phoenix Rising",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển với nhiều thành tích xuất sắc trong các giải đấu quốc tế.",
+        "mail": "phoenixrising@esport.com"
+    },
+    {
+        "name": "Thunder Storm",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển mạnh với phong cách chơi tấn công mạnh mẽ.",
+        "mail": "thunderstorm@esport.com"
+    },
+    {
+        "name": "Shadow Hunters",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển với kinh nghiệm dày dặn trong các giải đấu.",
+        "mail": "shadowhunters@esport.com"
+    },
+    {
+        "name": "Fire Birds",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển hàng đầu trong các giải đấu PUBG Mobile.",
+        "mail": "firebirds@esport.com"
+    },
+    {
+        "name": "Water Serpents",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển với nhiều thành tích xuất sắc trong các giải đấu.",
+        "mail": "waterserpents@esport.com"
+    },
+    {
+        "name": "Earth Titans",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển mạnh với phong cách chơi thận trọng.",
+        "mail": "earthtitans@esport.com"
+    },
+    {
+        "name": "Wind Riders",
+        "logoUrl": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=150&h=150&fit=crop",
+        "description": "Đội tuyển với kinh nghiệm dày dặn trong các giải đấu.",
+        "mail": "windriders@esport.com"
+    }
+]

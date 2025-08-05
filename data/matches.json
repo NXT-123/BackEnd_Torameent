@@ -1,0 +1,57 @@
+[
+    {
+        "tournamentId": null,
+        "teamA": null,
+        "teamB": null,
+        "scheduledAt": "2025-06-02T10:00:00.000Z",
+        "score": {
+            "a": 0,
+            "b": 0
+        },
+        "status": "pending"
+    },
+    {
+        "tournamentId": null,
+        "teamA": null,
+        "teamB": null,
+        "scheduledAt": "2025-06-03T14:00:00.000Z",
+        "score": {
+            "a": 0,
+            "b": 0
+        },
+        "status": "pending"
+    },
+    {
+        "tournamentId": null,
+        "teamA": null,
+        "teamB": null,
+        "scheduledAt": "2025-06-04T16:00:00.000Z",
+        "score": {
+            "a": 0,
+            "b": 0
+        },
+        "status": "pending"
+    },
+    {
+        "tournamentId": null,
+        "teamA": null,
+        "teamB": null,
+        "scheduledAt": "2025-06-05T18:00:00.000Z",
+        "score": {
+            "a": 0,
+            "b": 0
+        },
+        "status": "pending"
+    },
+    {
+        "tournamentId": null,
+        "teamA": null,
+        "teamB": null,
+        "scheduledAt": "2025-06-06T20:00:00.000Z",
+        "score": {
+            "a": 0,
+            "b": 0
+        },
+        "status": "pending"
+    }
+]
