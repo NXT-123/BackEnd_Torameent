@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { generateToken, generateRefreshToken } = require('../utils/jwt');
 
@@ -24,11 +25,12 @@ class AuthController {
                 });
             }
 
-            // Create new user
+            // Create new user (store hashed password to passwordHash)
+            const passwordHash = await bcrypt.hash(password, 10);
             const user = new User({
                 email,
                 fullName,
-                password,
+                passwordHash,
                 role
             });
 
@@ -40,7 +42,7 @@ class AuthController {
 
             // Remove password from response
             const userResponse = user.toObject();
-            delete userResponse.password;
+            delete userResponse.passwordHash;
 
             res.status(201).json({
                 success: true,
@@ -53,7 +55,7 @@ class AuthController {
             });
         } catch (error) {
             console.error('Registration error:', error);
-            
+
             if (error.name === 'ValidationError') {
                 const errors = Object.values(error.errors).map(err => err.message);
                 return res.status(400).json({
@@ -83,8 +85,8 @@ class AuthController {
                 });
             }
 
-            // Find user and include password for comparison
-            const user = await User.findOne({ email }).select('+password');
+            // Find user and include passwordHash for comparison
+            const user = await User.findOne({ email });
             if (!user) {
                 return res.status(401).json({
                     success: false,
@@ -92,16 +94,8 @@ class AuthController {
                 });
             }
 
-            // Check if user is active
-            if (!user.isActive) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Account is deactivated'
-                });
-            }
-
-            // Verify password
-            const isPasswordValid = await user.comparePassword(password);
+            // Verify password using bcrypt against passwordHash
+            const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
             if (!isPasswordValid) {
                 return res.status(401).json({
                     success: false,
@@ -109,9 +103,7 @@ class AuthController {
                 });
             }
 
-            // Update last login
-            user.lastLogin = new Date();
-            await user.save();
+            // Update last login: field not present in schema; skip to keep schema alignment
 
             // Generate tokens
             const token = generateToken(user._id);
@@ -119,7 +111,7 @@ class AuthController {
 
             // Remove password from response
             const userResponse = user.toObject();
-            delete userResponse.password;
+            delete userResponse.passwordHash;
 
             res.json({
                 success: true,
@@ -142,8 +134,7 @@ class AuthController {
     // Get current user profile
     static async getProfile(req, res) {
         try {
-            const user = await User.findById(req.user._id)
-                .populate('favorites', 'name status startDate endDate logo');
+            const user = await User.findById(req.user._id);
 
             if (!user) {
                 return res.status(404).json({
@@ -168,11 +159,11 @@ class AuthController {
     // Update user profile
     static async updateProfile(req, res) {
         try {
-            const { fullName, avatar } = req.body;
+            const { fullName, avatarUrl } = req.body;
             const updateData = {};
 
             if (fullName) updateData.fullName = fullName;
-            if (avatar !== undefined) updateData.avatar = avatar;
+            if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl;
 
             const user = await User.findByIdAndUpdate(
                 req.user._id,
@@ -194,7 +185,7 @@ class AuthController {
             });
         } catch (error) {
             console.error('Update profile error:', error);
-            
+
             if (error.name === 'ValidationError') {
                 const errors = Object.values(error.errors).map(err => err.message);
                 return res.status(400).json({
@@ -224,7 +215,7 @@ class AuthController {
             }
 
             // Get user with password
-            const user = await User.findById(req.user._id).select('+password');
+            const user = await User.findById(req.user._id);
             if (!user) {
                 return res.status(404).json({
                     success: false,
@@ -233,7 +224,7 @@ class AuthController {
             }
 
             // Verify current password
-            const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+            const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
             if (!isCurrentPasswordValid) {
                 return res.status(400).json({
                     success: false,
@@ -242,7 +233,7 @@ class AuthController {
             }
 
             // Update password
-            user.password = newPassword;
+            user.passwordHash = await bcrypt.hash(newPassword, 10);
             await user.save();
 
             res.json({

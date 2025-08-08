@@ -6,16 +6,7 @@ class MatchController {
     // Create new match
     static async createMatch(req, res) {
         try {
-            const {
-                tournamentId,
-                teamAId,
-                teamBId,
-                scheduleAt,
-                round = 1,
-                bracket = 'winners',
-                bestOf = 1,
-                refereeId
-            } = req.body;
+            const { tournamentId, teamA, teamB, scheduledAt } = req.body;
 
             // Validate tournament exists
             const tournament = await Tournament.findById(tournamentId);
@@ -26,37 +17,31 @@ class MatchController {
                 });
             }
 
-            // Validate competitors exist and belong to tournament
-            const [teamA, teamB] = await Promise.all([
-                Competitor.findOne({ _id: teamAId, tournamentId }),
-                Competitor.findOne({ _id: teamBId, tournamentId })
+            // Validate competitors exist
+            const [teamADoc, teamBDoc] = await Promise.all([
+                Competitor.findById(teamA),
+                Competitor.findById(teamB)
             ]);
-
-            if (!teamA || !teamB) {
+            if (!teamADoc || !teamBDoc) {
                 return res.status(400).json({
                     success: false,
-                    message: 'One or both competitors not found in this tournament'
+                    message: 'One or both competitors not found'
                 });
             }
 
             const match = new Match({
                 tournamentId,
-                teamAId,
-                teamBId,
-                scheduleAt: new Date(scheduleAt),
-                round,
-                bracket,
-                bestOf,
-                refereeId
+                teamA,
+                teamB,
+                scheduledAt: scheduledAt ? new Date(scheduledAt) : undefined
             });
 
             await match.save();
 
             const populatedMatch = await Match.findById(match._id)
-                .populate('teamAId', 'name logo')
-                .populate('teamBId', 'name logo')
-                .populate('tournamentId', 'name format')
-                .populate('refereeId', 'fullName email');
+                .populate('teamA', 'name logoUrl')
+                .populate('teamB', 'name logoUrl')
+                .populate('tournamentId', 'name format');
 
             res.status(201).json({
                 success: true,
@@ -65,7 +50,7 @@ class MatchController {
             });
         } catch (error) {
             console.error('Create match error:', error);
-            
+
             if (error.name === 'ValidationError') {
                 const errors = Object.values(error.errors).map(err => err.message);
                 return res.status(400).json({
@@ -85,15 +70,11 @@ class MatchController {
     // Get all matches with filtering
     static async getAllMatches(req, res) {
         try {
-            const { 
-                page = 1, 
-                limit = 10, 
+            const {
+                page = 1,
+                limit = 10,
                 tournamentId,
-                status,
-                round,
-                bracket,
-                sortBy = 'scheduleAt',
-                sortOrder = 'asc'
+                status
             } = req.query;
 
             const query = {};
@@ -101,19 +82,13 @@ class MatchController {
             // Add filters
             if (tournamentId) query.tournamentId = tournamentId;
             if (status) query.status = status;
-            if (round) query.round = parseInt(round);
-            if (bracket) query.bracket = bracket;
-
-            // Sort configuration
-            const sortConfig = {};
-            sortConfig[sortBy] = sortOrder === 'desc' ? -1 : 1;
+            // Sort by scheduledAt then _id as fallback
 
             const matches = await Match.find(query)
-                .populate('teamAId', 'name logo')
-                .populate('teamBId', 'name logo')
+                .populate('teamA', 'name logoUrl')
+                .populate('teamB', 'name logoUrl')
                 .populate('tournamentId', 'name format status')
-                .populate('winnerId', 'name logo')
-                .sort(sortConfig)
+                .sort({ scheduledAt: 1, _id: -1 })
                 .limit(limit * 1)
                 .skip((page - 1) * limit);
 
@@ -145,12 +120,9 @@ class MatchController {
             const { id } = req.params;
 
             const match = await Match.findById(id)
-                .populate('teamAId', 'name logo userId')
-                .populate('teamBId', 'name logo userId')
-                .populate('tournamentId', 'name format status organizerId')
-                .populate('winnerId', 'name logo')
-                .populate('refereeId', 'fullName email')
-                .populate('games.winner', 'name logo');
+                .populate('teamA', 'name logoUrl')
+                .populate('teamB', 'name logoUrl')
+                .populate('tournamentId', 'name format status');
 
             if (!match) {
                 return res.status(404).json({
@@ -176,20 +148,17 @@ class MatchController {
     static async updateMatch(req, res) {
         try {
             const { id } = req.params;
-            const updateData = req.body;
-
-            // Remove fields that shouldn't be updated directly
-            delete updateData.winnerId;
-            delete updateData.startTime;
-            delete updateData.endTime;
+            const allowed = ['tournamentId', 'teamA', 'teamB', 'scheduledAt', 'status', 'score'];
+            const updateData = {};
+            for (const k of allowed) if (req.body[k] !== undefined) updateData[k] = req.body[k];
 
             const match = await Match.findByIdAndUpdate(
                 id,
                 updateData,
                 { new: true, runValidators: true }
             ).populate([
-                { path: 'teamAId', select: 'name logo' },
-                { path: 'teamBId', select: 'name logo' },
+                { path: 'teamA', select: 'name logoUrl' },
+                { path: 'teamB', select: 'name logoUrl' },
                 { path: 'tournamentId', select: 'name format' }
             ]);
 
@@ -207,7 +176,7 @@ class MatchController {
             });
         } catch (error) {
             console.error('Update match error:', error);
-            
+
             if (error.name === 'ValidationError') {
                 const errors = Object.values(error.errors).map(err => err.message);
                 return res.status(400).json({
@@ -264,14 +233,9 @@ class MatchController {
                 });
             }
 
-            if (match.status !== 'scheduled') {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Match cannot be started from current status'
-                });
-            }
-
-            await match.start();
+            // With current schema, mark as pending to indicate started
+            match.status = 'pending';
+            await match.save();
 
             res.json({
                 success: true,
@@ -291,7 +255,7 @@ class MatchController {
     static async setMatchResult(req, res) {
         try {
             const { id } = req.params;
-            const { result, scoreA, scoreB } = req.body;
+            const { scoreA, scoreB } = req.body;
 
             if (scoreA === undefined || scoreB === undefined) {
                 return res.status(400).json({
@@ -308,26 +272,13 @@ class MatchController {
                 });
             }
 
-            await match.setResult(result || '', parseInt(scoreA), parseInt(scoreB));
-
-            // Update competitor stats
-            const teamA = await Competitor.findById(match.teamAId);
-            const teamB = await Competitor.findById(match.teamBId);
-
-            if (teamA && teamB) {
-                if (match.winnerId && match.winnerId.equals(match.teamAId)) {
-                    await teamA.updateStats(true);
-                    await teamB.updateStats(false);
-                } else if (match.winnerId && match.winnerId.equals(match.teamBId)) {
-                    await teamB.updateStats(true);
-                    await teamA.updateStats(false);
-                }
-            }
+            match.score = { a: parseInt(scoreA), b: parseInt(scoreB) };
+            match.status = 'done';
+            await match.save();
 
             const populatedMatch = await Match.findById(id)
-                .populate('teamAId', 'name logo')
-                .populate('teamBId', 'name logo')
-                .populate('winnerId', 'name logo');
+                .populate('teamA', 'name logoUrl')
+                .populate('teamB', 'name logoUrl');
 
             res.json({
                 success: true,
@@ -364,7 +315,8 @@ class MatchController {
                 });
             }
 
-            await match.rescheduleNewDate(new Date(newDate));
+            match.scheduledAt = new Date(newDate);
+            await match.save();
 
             res.json({
                 success: true,
@@ -384,7 +336,11 @@ class MatchController {
     static async addGame(req, res) {
         try {
             const { id } = req.params;
-            const { gameNumber, teamAScore, teamBScore, winnerId, duration, notes } = req.body;
+            // Not supported by current schema
+            return res.status(400).json({
+                success: false,
+                message: 'Adding games is not supported by current schema'
+            });
 
             const match = await Match.findById(id);
             if (!match) {
@@ -431,7 +387,7 @@ class MatchController {
             const { tournamentId } = req.params;
             const { page = 1, limit = 20 } = req.query;
 
-            const matches = await Match.findByTournament(tournamentId)
+            const matches = await Match.find({ tournamentId })
                 .limit(limit * 1)
                 .skip((page - 1) * limit);
 
@@ -462,7 +418,7 @@ class MatchController {
         try {
             const { competitorId } = req.params;
 
-            const matches = await Match.findByCompetitor(competitorId);
+            const matches = await Match.find({ $or: [{ teamA: competitorId }, { teamB: competitorId }] });
 
             res.json({
                 success: true,
@@ -482,9 +438,10 @@ class MatchController {
         try {
             const { limit = 10 } = req.query;
 
-            const matches = await Match.findUpcoming()
-                .populate('teamAId', 'name logo')
-                .populate('teamBId', 'name logo')
+            const now = new Date();
+            const matches = await Match.find({ status: 'pending', scheduledAt: { $gt: now } })
+                .populate('teamA', 'name logoUrl')
+                .populate('teamB', 'name logoUrl')
                 .populate('tournamentId', 'name status')
                 .limit(parseInt(limit));
 
@@ -504,9 +461,10 @@ class MatchController {
     // Get ongoing matches
     static async getOngoingMatches(req, res) {
         try {
-            const matches = await Match.findOngoing()
-                .populate('teamAId', 'name logo')
-                .populate('teamBId', 'name logo')
+            const now2 = new Date();
+            const matches = await Match.find({ status: 'pending', scheduledAt: { $lte: now2 } })
+                .populate('teamA', 'name logoUrl')
+                .populate('teamB', 'name logoUrl')
                 .populate('tournamentId', 'name status');
 
             res.json({
@@ -526,22 +484,10 @@ class MatchController {
     static async cancelMatch(req, res) {
         try {
             const { id } = req.params;
-            const { reason } = req.body;
-
-            const match = await Match.findById(id);
-            if (!match) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Match not found'
-                });
-            }
-
-            await match.cancel(reason || 'No reason provided');
-
-            res.json({
-                success: true,
-                message: 'Match cancelled successfully',
-                data: { match }
+            // Not supported by current schema
+            return res.status(400).json({
+                success: false,
+                message: 'Cancel match is not supported by current schema'
             });
         } catch (error) {
             console.error('Cancel match error:', error);
@@ -556,22 +502,10 @@ class MatchController {
     static async postponeMatch(req, res) {
         try {
             const { id } = req.params;
-            const { reason } = req.body;
-
-            const match = await Match.findById(id);
-            if (!match) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Match not found'
-                });
-            }
-
-            await match.postpone(reason || 'No reason provided');
-
-            res.json({
-                success: true,
-                message: 'Match postponed successfully',
-                data: { match }
+            // Not supported by current schema
+            return res.status(400).json({
+                success: false,
+                message: 'Postpone match is not supported by current schema'
             });
         } catch (error) {
             console.error('Postpone match error:', error);

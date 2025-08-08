@@ -1,335 +1,362 @@
 # Tournament Management System - Backend
 
-Hệ thống quản lý giải đấu hoàn chỉnh được xây dựng với Node.js, Express.js, và MongoDB.
+Backend quản lý giải đấu bằng Node.js, Express, MongoDB. Tài liệu này liệt kê lệnh cURL tương ứng với từng chức năng và output mong muốn (đã điều chỉnh khớp với schema model hiện tại của project).
 
-## 🚀 Tính năng
+## ⚙️ Cài đặt & Chạy
 
-### Quản lý người dùng
-- ✅ Đăng ký và đăng nhập với JWT authentication
-- ✅ Phân quyền người dùng (user, organizer, admin)
-- ✅ Quản lý profile cá nhân
-- ✅ Đổi mật khẩu
-
-### Quản lý giải đấu
-- ✅ Tạo và quản lý giải đấu
-- ✅ Đăng ký tham gia giải đấu
-- ✅ Quản lý thí sinh (competitors)
-- ✅ Theo dõi trạng thái giải đấu
-- ✅ Hỗ trợ nhiều format giải đấu
-
-### Quản lý trận đấu
-- ✅ Tạo và lên lịch trận đấu
-- ✅ Quản lý kết quả trận đấu
-- ✅ Hỗ trợ format best-of-X
-- ✅ Theo dõi thống kê
-
-### Quản lý tin tức
-- ✅ Tạo và xuất bản tin tức
-- ✅ Bình luận và tương tác
-- ✅ Tìm kiếm tin tức
-- ✅ Tin tức nổi bật
-
-### Quản lý highlight
-- ✅ Quản lý video/hình ảnh highlight
-- ✅ Tích hợp đa nền tảng
-- ✅ Thống kê engagement
-- ✅ Gắn thẻ và phân loại
-
-## 🛠️ Công nghệ sử dụng
-
-- **Backend Framework**: Node.js + Express.js
-- **Database**: MongoDB với Mongoose ODM
-- **Authentication**: JWT (JSON Web Tokens)
-- **Password Hashing**: bcryptjs
-- **Validation**: Mongoose validators + custom validation
-- **Environment Management**: dotenv
-- **File Upload**: multer
-- **CORS**: cors middleware
-
-## 📁 Cấu trúc thư mục
-
-```
-src/backend/
-├── config/
-│   ├── config.js          # Cấu hình ứng dụng
-│   └── database.js        # Kết nối MongoDB
-├── controllers/
-│   ├── AuthController.js      # Controller xác thực
-│   ├── TournamentController.js # Controller giải đấu
-│   ├── NewsController.js      # Controller tin tức
-│   ├── MatchController.js     # Controller trận đấu
-│   └── HighlightController.js # Controller highlight
-├── middleware/
-│   └── auth.js            # Middleware xác thực và phân quyền
-├── models/
-│   ├── User.js            # Model người dùng
-│   ├── Tournament.js      # Model giải đấu
-│   ├── Competitor.js      # Model thí sinh
-│   ├── Match.js           # Model trận đấu
-│   ├── News.js            # Model tin tức
-│   └── Highlight.js       # Model highlight
-├── routes/
-│   ├── authRoutes.js      # Routes xác thực
-│   ├── tournamentRoutes.js # Routes giải đấu
-│   ├── newsRoutes.js      # Routes tin tức
-│   ├── matchRoutes.js     # Routes trận đấu
-│   └── highlightRoutes.js # Routes highlight
-├── utils/
-│   └── jwt.js             # Utilities JWT
-├── .env                   # Biến môi trường
-├── package.json           # Dependencies
-└── server.js              # Entry point
-```
-
-## ⚙️ Cài đặt và chạy
-
-### 1. Cài đặt dependencies
+1) Cài dependencies (tại thư mục gốc repo)
 
 ```bash
-cd src/backend
 npm install
 ```
 
-### 2. Cấu hình môi trường
-
-Tạo file `.env` trong thư mục `src/backend/`:
+2) Tạo `.env`
 
 ```env
 PORT=3000
 MONGODB_URI=mongodb://localhost:27017/tournament_db
-JWT_SECRET=your_jwt_secret_key_here_change_in_production
+JWT_SECRET=your_secret_key
 JWT_EXPIRE=7d
 NODE_ENV=development
 ```
 
-### 3. Chạy MongoDB
-
-Đảm bảo MongoDB đang chạy trên máy của bạn:
+3) Chạy MongoDB (Docker hoặc local)
 
 ```bash
-# Sử dụng Docker
 docker run -d -p 27017:27017 --name mongodb mongo:latest
-
-# Hoặc cài đặt MongoDB locally
+# hoặc
 mongod
 ```
 
-### 4. Chạy server
+4) Chạy server
 
 ```bash
-# Development mode với nodemon
 npm run dev
-
-# Production mode
+# hoặc production
 npm start
 ```
 
-Server sẽ chạy tại `http://localhost:3000`
+Health check: `GET http://localhost:3000/api/health`
 
-## 📚 API Documentation
-
-### Authentication Endpoints
+Header xác thực khi cần:
 
 ```
-POST /api/auth/register      # Đăng ký người dùng mới
-POST /api/auth/login         # Đăng nhập
-GET  /api/auth/profile       # Lấy thông tin profile (auth required)
-PUT  /api/auth/profile       # Cập nhật profile (auth required)
-PUT  /api/auth/change-password # Đổi mật khẩu (auth required)
-POST /api/auth/logout        # Đăng xuất (auth required)
+Authorization: Bearer <token>
 ```
 
-### Tournament Endpoints
+Role: `user`, `organizer`, `admin`.
 
-```
-GET    /api/tournaments                    # Lấy danh sách giải đấu
-GET    /api/tournaments/upcoming           # Giải đấu sắp diễn ra
-GET    /api/tournaments/ongoing            # Giải đấu đang diễn ra
-GET    /api/tournaments/:id                # Lấy thông tin giải đấu
-GET    /api/tournaments/:id/participants   # Danh sách thí sinh
-POST   /api/tournaments                    # Tạo giải đấu (organizer/admin)
-PUT    /api/tournaments/:id                # Cập nhật giải đấu (owner/admin)
-DELETE /api/tournaments/:id                # Xóa giải đấu (owner/admin)
-POST   /api/tournaments/:id/register       # Đăng ký tham gia (auth required)
-DELETE /api/tournaments/:id/withdraw       # Rút khỏi giải đấu (auth required)
+## 🔐 Authentication
+
+### Đăng ký
+
+```bash
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","fullName":"User","password":"123456","role":"organizer"}'
 ```
 
-### Match Endpoints
-
-```
-GET  /api/matches                          # Danh sách trận đấu
-GET  /api/matches/upcoming                 # Trận đấu sắp diễn ra
-GET  /api/matches/ongoing                  # Trận đấu đang diễn ra
-GET  /api/matches/:id                      # Thông tin trận đấu
-POST /api/matches                          # Tạo trận đấu (organizer/admin)
-PUT  /api/matches/:id/result               # Cập nhật kết quả (organizer/admin)
-PUT  /api/matches/:id/start                # Bắt đầu trận đấu (organizer/admin)
-```
-
-### News Endpoints
-
-```
-GET  /api/news                             # Danh sách tin tức
-GET  /api/news/featured                    # Tin tức nổi bật
-GET  /api/news/:id                         # Chi tiết tin tức
-POST /api/news                             # Tạo tin tức (organizer/admin)
-PUT  /api/news/:id                         # Cập nhật tin tức (organizer/admin)
-POST /api/news/:id/comment                 # Bình luận (auth required)
-POST /api/news/:id/like                    # Like tin tức (auth required)
-```
-
-### Highlight Endpoints
-
-```
-GET  /api/highlights                       # Danh sách highlight
-GET  /api/highlights/featured              # Highlight nổi bật
-GET  /api/highlights/popular               # Highlight phổ biến
-GET  /api/highlights/:id                   # Chi tiết highlight
-POST /api/highlights                       # Tạo highlight (organizer/admin)
-POST /api/highlights/:id/like              # Like highlight (auth required)
-POST /api/highlights/:id/share             # Share highlight (auth required)
-```
-
-## 🔐 Authentication & Authorization
-
-### JWT Token
-
-API sử dụng JWT tokens để xác thực. Include token trong header:
-
-```
-Authorization: Bearer <your_jwt_token>
-```
-
-### User Roles
-
-- **user**: Người dùng thông thường
-- **organizer**: Người tổ chức giải đấu
-- **admin**: Quản trị viên hệ thống
-
-## 📊 Database Schema
-
-### User Model
-
-```javascript
-{
-  email: String (unique, required),
-  fullName: String (required),
-  password: String (hashed, required),
-  role: Enum ['user', 'organizer', 'admin'],
-  avatar: String,
-  favorites: [ObjectId], // Tournament IDs
-  isActive: Boolean,
-  lastLogin: Date,
-  createdAt: Date,
-  updatedAt: Date
-}
-```
-
-### Tournament Model
-
-```javascript
-{
-  name: String (required),
-  format: Enum ['single-elimination', 'double-elimination', 'round-robin', 'swiss', 'league'],
-  status: Enum ['upcoming', 'ongoing', 'completed', 'cancelled'],
-  description: String (required),
-  gameName: String (required),
-  organizerId: ObjectId (User),
-  startDate: Date (required),
-  endDate: Date (required),
-  maxPlayers: Number (required),
-  currentPlayers: Number,
-  registrationDeadline: Date,
-  prizePool: Number,
-  entryFee: Number,
-  competitors: [ObjectId], // Competitor IDs
-  matches: [ObjectId], // Match IDs
-  createdAt: Date,
-  updatedAt: Date
-}
-```
-
-## 🔍 API Response Format
-
-### Success Response
+Output mong muốn:
 
 ```json
 {
   "success": true,
-  "message": "Operation successful",
+  "message": "User registered successfully",
   "data": {
-    // Response data
+    "user": {
+      "_id": "<userId>",
+      "email": "user@example.com",
+      "fullName": "User",
+      "role": "organizer",
+      "avatarUrl": null,
+      "createdAt": "<iso>",
+      "updatedAt": "<iso>"
+    },
+    "token": "<jwt>",
+    "refreshToken": "<jwt>"
   }
 }
 ```
 
-### Error Response
+### Đăng nhập
+
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"123456"}'
+```
+
+Output mong muốn: giống đăng ký (trả về `user`, `token`, `refreshToken`).
+
+### Lấy/Cập nhật hồ sơ, Đổi mật khẩu
+
+```bash
+# Lấy hồ sơ
+curl http://localhost:3000/api/auth/profile \
+  -H "Authorization: Bearer <token>"
+
+# Cập nhật hồ sơ
+curl -X PUT http://localhost:3000/api/auth/profile \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"fullName":"New Name","avatarUrl":"https://..."}'
+
+# Đổi mật khẩu
+curl -X PUT http://localhost:3000/api/auth/change-password \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"currentPassword":"123456","newPassword":"654321"}'
+```
+
+Output mong muốn (ví dụ cập nhật):
 
 ```json
 {
-  "success": false,
-  "message": "Error message",
-  "errors": ["Detailed error messages"] // Optional
+  "success": true,
+  "message": "Profile updated successfully",
+  "data": { "user": { "_id": "<userId>", "fullName": "New Name", "avatarUrl": "https://..." } }
 }
 ```
 
-## 🧪 Testing
+## 🏆 Tournaments
+
+Model hiện có: `name`, `gameName`, `format`, `description`, `organizerId`, `competitor` (mảng ObjectId), `avatarUrl`, `startDate`, `endDate`, `status` (upcoming|ongoing|completed), `numberOfPlayers`, `maxPlayers`.
+
+### Tạo giải (organizer/admin)
 
 ```bash
-# Chạy health check
-curl http://localhost:3000/api/health
-
-# Test đăng ký người dùng
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","fullName":"Test User","password":"123456"}'
+curl -X POST http://localhost:3000/api/tournaments \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"name":"Summer Cup","gameName":"Valorant","format":"single-elimination","description":"...","avatarUrl":"https://...","startDate":"2025-09-01","endDate":"2025-09-30","maxPlayers":16}'
 ```
 
-## 🛡️ Security Features
+Output mong muốn:
 
-- ✅ Password hashing với bcryptjs
-- ✅ JWT authentication
-- ✅ Role-based access control
-- ✅ Input validation
-- ✅ CORS protection
-- ✅ MongoDB injection protection
-
-## 🚀 Deployment
-
-### Environment Variables for Production
-
-```env
-NODE_ENV=production
-PORT=3000
-MONGODB_URI=mongodb://your-production-db/tournament_db
-JWT_SECRET=your-super-secret-production-key
-JWT_EXPIRE=7d
+```json
+{
+  "success": true,
+  "message": "Tournament created successfully",
+  "data": { "tournament": { "_id": "<id>", "name": "Summer Cup", "organizerId": { "_id": "<uid>", "fullName": "..." } } }
+}
 ```
 
-### Docker Deployment
+### Danh sách / Chi tiết
 
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-EXPOSE 3000
-CMD ["npm", "start"]
+```bash
+curl "http://localhost:3000/api/tournaments?page=1&limit=10&status=upcoming&search=summer"
+curl http://localhost:3000/api/tournaments/<id>
 ```
 
-## 🤝 Contributing
+Output mong muốn (list):
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
+```json
+{
+  "success": true,
+  "data": {
+    "tournaments": [ { "_id": "<id>", "name": "..." } ],
+    "pagination": { "current": 1, "pages": 1, "total": 1 }
+  }
+}
+```
 
-## 📄 License
+### Người tham gia, Đăng ký/Rút
 
-This project is licensed under the MIT License.
+```bash
+# Danh sách thí sinh
+curl http://localhost:3000/api/tournaments/<id>/participants
 
----
+# Đăng ký tham gia (auth)
+curl -X POST http://localhost:3000/api/tournaments/<id>/register \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"name":"My Team","logoUrl":"https://...","description":"...","mail":"team@example.com"}'
 
-**Lưu ý**: Đây là hệ thống backend hoàn chỉnh cho quản lý giải đấu. Hệ thống hỗ trợ tất cả các chức năng cần thiết từ quản lý người dùng, giải đấu, trận đấu đến tin tức và highlight.
+# Rút khỏi giải (auth) — yêu cầu competitorId
+curl -X DELETE http://localhost:3000/api/tournaments/<id>/withdraw \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"competitorId":"<competitorId>"}'
+```
+
+Output mong muốn (đăng ký):
+
+```json
+{
+  "success": true,
+  "message": "Successfully registered for tournament",
+  "data": { "competitor": { "_id": "<cid>", "name": "My Team" }, "tournament": { "_id": "<id>" } }
+}
+```
+
+### Cập nhật/Xóa/Trạng thái
+
+```bash
+curl -X PUT http://localhost:3000/api/tournaments/<id> \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"description":"Updated"}'
+
+curl -X DELETE http://localhost:3000/api/tournaments/<id> \
+  -H "Authorization: Bearer <token)"
+
+curl -X PUT http://localhost:3000/api/tournaments/<id>/status \
+  -H "Authorization: Bearer <token)" -H "Content-Type: application/json" \
+  -d '{"status":"ongoing"}'
+```
+
+Output mong muốn (trạng thái):
+
+```json
+{ "success": true, "message": "Tournament status updated successfully", "data": { "tournament": { "_id": "<id>", "status": "ongoing" } } }
+```
+
+### Upcoming / Ongoing
+
+```bash
+curl http://localhost:3000/api/tournaments/upcoming
+curl http://localhost:3000/api/tournaments/ongoing
+```
+
+## 🥊 Matches
+
+Model hiện có: `tournamentId`, `teamA`, `teamB`, `scheduledAt`, `score.{a,b}`, `status` (pending|done).
+
+### Tạo trận (organizer/admin)
+
+```bash
+curl -X POST http://localhost:3000/api/matches \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"tournamentId":"<tid>","teamA":"<cidA>","teamB":"<cidB>","scheduledAt":"2025-09-02T10:00:00Z"}'
+```
+
+Output mong muốn:
+
+```json
+{ "success": true, "message": "Match created successfully", "data": { "match": { "_id": "<mid>", "teamA": {"_id":"<cidA>","name":"..."} } } }
+```
+
+### Danh sách / Chi tiết
+
+```bash
+curl "http://localhost:3000/api/matches?page=1&limit=10&tournamentId=<tid>&status=pending"
+curl http://localhost:3000/api/matches/<mid>
+```
+
+### Bắt đầu, Kết quả, Dời lịch
+
+```bash
+# Bắt đầu
+curl -X PUT http://localhost:3000/api/matches/<mid>/start -H "Authorization: Bearer <token>"
+
+# Cập nhật kết quả
+curl -X PUT http://localhost:3000/api/matches/<mid>/result \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"scoreA":2,"scoreB":1}'
+
+# Dời lịch
+curl -X PUT http://localhost:3000/api/matches/<mid>/reschedule \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"newDate":"2025-09-03T10:00:00Z"}'
+```
+
+Output mong muốn (kết quả):
+
+```json
+{ "success": true, "message": "Match result set successfully", "data": { "match": { "_id": "<mid>", "score": {"a":2,"b":1}, "status": "done" } } }
+```
+
+### Theo giải/đội, Upcoming/Ongoing
+
+```bash
+curl "http://localhost:3000/api/matches/tournament/<tid>?page=1&limit=20"
+curl http://localhost:3000/api/matches/competitor/<cid>
+curl http://localhost:3000/api/matches/upcoming
+curl http://localhost:3000/api/matches/ongoing
+```
+
+Lưu ý: các route `addGame`, `cancel`, `postpone` hiện không hỗ trợ (trả 400).
+
+## 📰 News
+
+Model hiện có: `tournamentId`, `title`, `content`, `images`, `authorId`, `publishedAt`, `status` (private|public).
+
+```bash
+# Tạo (organizer/admin)
+curl -X POST http://localhost:3000/api/news \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"title":"New","content":"...","tournamentId":"<tid>","images":["https://..."]}'
+
+# Danh sách public
+curl "http://localhost:3000/api/news?page=1&limit=10&search=new"
+
+# Chi tiết
+curl http://localhost:3000/api/news/<nid>
+
+# Cập nhật/Xóa (organizer/admin)
+curl -X PUT http://localhost:3000/api/news/<nid> -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d '{"title":"Updated"}'
+curl -X DELETE http://localhost:3000/api/news/<nid> -H "Authorization: Bearer <token)"
+
+# Xuất bản (organizer/admin)
+curl -X PUT http://localhost:3000/api/news/<nid>/publish -H "Authorization: Bearer <token)"
+
+# Theo giải/featured/tìm kiếm/author
+curl "http://localhost:3000/api/news/tournament/<tid>?page=1&limit=10"
+curl "http://localhost:3000/api/news/featured?limit=5"
+curl "http://localhost:3000/api/news/search?q=new&page=1&limit=10"
+curl "http://localhost:3000/api/news/author/<uid>?page=1&limit=10"
+```
+
+Output mong muốn (publish):
+
+```json
+{ "success": true, "message": "News article published successfully", "data": { "news": { "_id": "<nid>", "status": "public" } } }
+```
+
+Lưu ý: `comment`, `like` chưa hỗ trợ (trả 400).
+
+## 🎬 Highlights
+
+Model hiện có: `tournamentId`, `matchId`, `title`, `videoUrl`, `description`, `status` (private|public).
+
+```bash
+# Tạo (organizer/admin)
+curl -X POST http://localhost:3000/api/highlights \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"title":"Epic","description":"...","videoUrl":"https://...","tournamentId":"<tid>","matchId":"<mid>","status":"public"}'
+
+# Danh sách public / Chi tiết
+curl "http://localhost:3000/api/highlights?page=1&limit=10&search=epic"
+curl http://localhost:3000/api/highlights/<hid>
+
+# Cập nhật/Xóa/Trạng thái (organizer/admin)
+curl -X PUT http://localhost:3000/api/highlights/<hid> -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d '{"title":"Updated"}'
+curl -X DELETE http://localhost:3000/api/highlights/<hid> -H "Authorization: Bearer <token)"
+curl -X PUT http://localhost:3000/api/highlights/<hid>/status -H "Authorization: Bearer <token)" -H "Content-Type: application/json" -d '{"status":"private"}'
+
+# Theo giải / Theo trận / Featured / Popular / Search
+curl "http://localhost:3000/api/highlights/tournament/<tid>?page=1&limit=10"
+curl http://localhost:3000/api/highlights/match/<mid>
+curl "http://localhost:3000/api/highlights/featured?limit=5"
+curl "http://localhost:3000/api/highlights/popular?limit=10"
+curl "http://localhost:3000/api/highlights/search?q=epic&page=1&limit=10"
+```
+
+Output mong muốn (status):
+
+```json
+{ "success": true, "message": "Highlight status updated successfully", "data": { "highlight": { "_id": "<hid>", "status": "private" } } }
+```
+
+Lưu ý: `like`, `share`, `featured`, `attach-match`, `type` filter hiện chưa hỗ trợ (trả 400 nếu gọi các route này).
+
+## 📦 Định dạng response chuẩn
+
+```json
+{ "success": true, "message": "...", "data": { /* tuỳ endpoint */ } }
+```
+
+Khi lỗi:
+
+```json
+{ "success": false, "message": "<lý do>" }
+```
+
+## 📝 Ghi chú
+
+- Nếu gặp lỗi `Cannot find module 'express'`, hãy chạy `npm install` trước khi `npm run dev`.
+- Trên Windows PowerShell không cần dùng `| cat` để xem log.

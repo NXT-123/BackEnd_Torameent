@@ -6,21 +6,7 @@ class TournamentController {
     // Create new tournament
     static async createTournament(req, res) {
         try {
-            const {
-                name,
-                format,
-                description,
-                gameName,
-                startDate,
-                endDate,
-                maxPlayers,
-                registrationDeadline,
-                prizePool,
-                entryFee,
-                rules,
-                logo,
-                tags
-            } = req.body;
+            const { name, format, description, gameName, startDate, endDate, maxPlayers, avatarUrl } = req.body;
 
             const tournament = new Tournament({
                 name,
@@ -28,15 +14,10 @@ class TournamentController {
                 description,
                 gameName,
                 organizerId: req.user._id,
-                startDate: new Date(startDate),
-                endDate: new Date(endDate),
+                startDate: startDate ? new Date(startDate) : undefined,
+                endDate: endDate ? new Date(endDate) : undefined,
                 maxPlayers,
-                registrationDeadline: new Date(registrationDeadline),
-                prizePool: prizePool || 0,
-                entryFee: entryFee || 0,
-                rules,
-                logo,
-                tags: tags || []
+                avatarUrl
             });
 
             await tournament.save();
@@ -51,7 +32,7 @@ class TournamentController {
             });
         } catch (error) {
             console.error('Create tournament error:', error);
-            
+
             if (error.name === 'ValidationError') {
                 const errors = Object.values(error.errors).map(err => err.message);
                 return res.status(400).json({
@@ -71,21 +52,21 @@ class TournamentController {
     // Get all tournaments with filtering and pagination
     static async getAllTournaments(req, res) {
         try {
-            const { 
-                page = 1, 
-                limit = 10, 
-                status, 
-                format, 
+            const {
+                page = 1,
+                limit = 10,
+                status,
+                format: formatFilter,
                 search,
-                sortBy = 'startDate',
-                sortOrder = 'asc'
+                gameName
             } = req.query;
 
-            const query = { isPublic: true };
+            const query = {};
 
             // Add filters
             if (status) query.status = status;
-            if (format) query.format = format;
+            if (formatFilter) query.format = formatFilter;
+            if (gameName) query.gameName = gameName;
             if (search) {
                 query.$or = [
                     { name: { $regex: search, $options: 'i' } },
@@ -94,13 +75,9 @@ class TournamentController {
                 ];
             }
 
-            // Sort configuration
-            const sortConfig = {};
-            sortConfig[sortBy] = sortOrder === 'desc' ? -1 : 1;
-
             const tournaments = await Tournament.find(query)
                 .populate('organizerId', 'fullName email')
-                .sort(sortConfig)
+                .sort({ _id: -1 })
                 .limit(limit * 1)
                 .skip((page - 1) * limit);
 
@@ -132,14 +109,8 @@ class TournamentController {
             const { id } = req.params;
 
             const tournament = await Tournament.findById(id)
-                .populate('organizerId', 'fullName email avatar')
-                .populate({
-                    path: 'competitors',
-                    populate: {
-                        path: 'userId',
-                        select: 'fullName email avatar'
-                    }
-                });
+                .populate('organizerId', 'fullName email')
+                .populate('competitor');
 
             if (!tournament) {
                 return res.status(404).json({
@@ -165,11 +136,11 @@ class TournamentController {
     static async updateTournament(req, res) {
         try {
             const { id } = req.params;
-            const updateData = req.body;
-
-            // Remove fields that shouldn't be updated
-            delete updateData.organizerId;
-            delete updateData.currentPlayers;
+            const allowedFields = ['name', 'gameName', 'format', 'description', 'avatarUrl', 'startDate', 'endDate', 'status', 'numberOfPlayers', 'maxPlayers'];
+            const updateData = {};
+            for (const key of allowedFields) {
+                if (req.body[key] !== undefined) updateData[key] = req.body[key];
+            }
 
             const tournament = await Tournament.findByIdAndUpdate(
                 id,
@@ -191,7 +162,7 @@ class TournamentController {
             });
         } catch (error) {
             console.error('Update tournament error:', error);
-            
+
             if (error.name === 'ValidationError') {
                 const errors = Object.values(error.errors).map(err => err.message);
                 return res.status(400).json({
@@ -222,9 +193,11 @@ class TournamentController {
                 });
             }
 
-            // Clean up related data
-            await Competitor.deleteMany({ tournamentId: id });
+            // Clean up related data: remove matches of this tournament and competitors referenced by it
             await Match.deleteMany({ tournamentId: id });
+            if (tournament && Array.isArray(tournament.competitor) && tournament.competitor.length) {
+                await Competitor.deleteMany({ _id: { $in: tournament.competitor } });
+            }
 
             res.json({
                 success: true,
@@ -243,7 +216,7 @@ class TournamentController {
     static async registerForTournament(req, res) {
         try {
             const { id } = req.params;
-            const { name, logo, teamMembers = [] } = req.body;
+            const { name, logoUrl, description, mail } = req.body;
 
             const tournament = await Tournament.findById(id);
             if (!tournament) {
@@ -252,46 +225,26 @@ class TournamentController {
                     message: 'Tournament not found'
                 });
             }
-
-            // Check if registration is open
-            if (!tournament.isRegistrationOpen()) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Registration is closed for this tournament'
-                });
-            }
-
-            // Check if user already registered
-            const existingCompetitor = await Competitor.findOne({
-                tournamentId: id,
-                userId: req.user._id
-            });
-
-            if (existingCompetitor) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'You are already registered for this tournament'
-                });
-            }
-
-            // Create competitor
+            // Create competitor and attach to tournament's competitor list
             const competitor = new Competitor({
                 name: name || req.user.fullName,
-                logo,
-                tournamentId: id,
-                userId: req.user._id,
-                teamMembers
+                logoUrl,
+                description,
+                mail
             });
 
             await competitor.save();
 
-            // Update tournament participant count
-            await tournament.addTeam(competitor._id);
+            const updated = await Tournament.findByIdAndUpdate(
+                id,
+                { $addToSet: { competitor: competitor._id }, $inc: { numberOfPlayers: 1 } },
+                { new: true }
+            );
 
             res.status(201).json({
                 success: true,
                 message: 'Successfully registered for tournament',
-                data: { competitor }
+                data: { competitor, tournament: updated }
             });
         } catch (error) {
             console.error('Tournament registration error:', error);
@@ -307,31 +260,25 @@ class TournamentController {
         try {
             const { id } = req.params;
 
-            const competitor = await Competitor.findOne({
-                tournamentId: id,
-                userId: req.user._id
-            });
+            const { competitorId } = req.body;
 
-            if (!competitor) {
-                return res.status(404).json({
+            if (!competitorId) {
+                return res.status(400).json({
                     success: false,
-                    message: 'You are not registered for this tournament'
+                    message: 'competitorId is required to withdraw'
                 });
             }
 
             const tournament = await Tournament.findById(id);
-            if (tournament.status !== 'upcoming') {
-                return res.status(400).json({
+            if (!tournament) {
+                return res.status(404).json({
                     success: false,
-                    message: 'Cannot withdraw from ongoing or completed tournament'
+                    message: 'Tournament not found'
                 });
             }
 
-            // Remove competitor
-            await Competitor.findByIdAndDelete(competitor._id);
-
-            // Update tournament participant count
-            await tournament.removeTeam(competitor._id);
+            await Tournament.findByIdAndUpdate(id, { $pull: { competitor: competitorId }, $inc: { numberOfPlayers: -1 } });
+            await Competitor.findByIdAndDelete(competitorId);
 
             res.json({
                 success: true,
@@ -351,7 +298,8 @@ class TournamentController {
         try {
             const { id } = req.params;
 
-            const competitors = await Competitor.findByTournament(id);
+            const tournament = await Tournament.findById(id).populate('competitor');
+            const competitors = tournament ? tournament.competitor : [];
 
             res.json({
                 success: true,
@@ -371,7 +319,7 @@ class TournamentController {
         try {
             const { organizerId } = req.params;
 
-            const tournaments = await Tournament.findByOrganizer(organizerId);
+            const tournaments = await Tournament.find({ organizerId }).sort({ _id: -1 });
 
             res.json({
                 success: true,
@@ -392,16 +340,17 @@ class TournamentController {
             const { id } = req.params;
             const { status } = req.body;
 
-            const tournament = await Tournament.findById(id);
+            const tournament = await Tournament.findByIdAndUpdate(
+                id,
+                { status },
+                { new: true }
+            );
             if (!tournament) {
                 return res.status(404).json({
                     success: false,
                     message: 'Tournament not found'
                 });
             }
-
-            await tournament.updateStatus(status);
-
             res.json({
                 success: true,
                 message: 'Tournament status updated successfully',
@@ -419,7 +368,8 @@ class TournamentController {
     // Get upcoming tournaments
     static async getUpcomingTournaments(req, res) {
         try {
-            const tournaments = await Tournament.findUpcoming()
+            const now = new Date();
+            const tournaments = await Tournament.find({ status: 'upcoming', startDate: { $gte: now } })
                 .populate('organizerId', 'fullName email')
                 .limit(10);
 
@@ -439,7 +389,8 @@ class TournamentController {
     // Get ongoing tournaments
     static async getOngoingTournaments(req, res) {
         try {
-            const tournaments = await Tournament.findOngoing()
+            const now2 = new Date();
+            const tournaments = await Tournament.find({ status: 'ongoing', startDate: { $lte: now2 } })
                 .populate('organizerId', 'fullName email');
 
             res.json({

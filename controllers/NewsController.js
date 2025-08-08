@@ -4,27 +4,14 @@ class NewsController {
     // Create new news article
     static async createNews(req, res) {
         try {
-            const {
-                title,
-                content,
-                tournamentId,
-                tags = [],
-                priority = 'normal',
-                metaDescription,
-                images = [],
-                isFeatured = false
-            } = req.body;
+            const { title, content, tournamentId, images = [] } = req.body;
 
             const news = new News({
                 title,
                 content,
                 authorId: req.user._id,
                 tournamentId,
-                tags,
-                priority,
-                metaDescription,
-                images,
-                isFeatured
+                images
             });
 
             await news.save();
@@ -40,7 +27,7 @@ class NewsController {
             });
         } catch (error) {
             console.error('Create news error:', error);
-            
+
             if (error.name === 'ValidationError') {
                 const errors = Object.values(error.errors).map(err => err.message);
                 return res.status(400).json({
@@ -60,40 +47,28 @@ class NewsController {
     // Get all published news with filtering and pagination
     static async getAllNews(req, res) {
         try {
-            const { 
-                page = 1, 
-                limit = 10, 
+            const {
+                page = 1,
+                limit = 10,
                 tournamentId,
-                priority,
-                search,
-                sortBy = 'publishedAt',
-                sortOrder = 'desc'
+                search
             } = req.query;
 
-            const query = { 
-                status: 'published',
-                isPublic: true 
-            };
+            const query = { status: 'public' };
 
             // Add filters
             if (tournamentId) query.tournamentId = tournamentId;
-            if (priority) query.priority = priority;
             if (search) {
                 query.$or = [
                     { title: { $regex: search, $options: 'i' } },
-                    { content: { $regex: search, $options: 'i' } },
-                    { tags: { $in: [new RegExp(search, 'i')] } }
+                    { content: { $regex: search, $options: 'i' } }
                 ];
             }
 
-            // Sort configuration
-            const sortConfig = {};
-            sortConfig[sortBy] = sortOrder === 'desc' ? -1 : 1;
-
             const news = await News.find(query)
-                .populate('authorId', 'fullName email avatar')
-                .populate('tournamentId', 'name status logo')
-                .sort(sortConfig)
+                .populate('authorId', 'fullName email')
+                .populate('tournamentId', 'name status')
+                .sort({ publishedAt: -1, _id: -1 })
                 .limit(limit * 1)
                 .skip((page - 1) * limit);
 
@@ -125,11 +100,9 @@ class NewsController {
             const { id } = req.params;
             let news;
 
-            // Try to find by ID first, then by slug
+            // Find by ID only (no slug in current schema)
             if (id.match(/^[0-9a-fA-F]{24}$/)) {
                 news = await News.findById(id);
-            } else {
-                news = await News.findOne({ slug: id });
             }
 
             if (!news) {
@@ -139,14 +112,10 @@ class NewsController {
                 });
             }
 
-            // Increment views
-            await news.incrementViews();
-
             // Populate related data
             await news.populate([
-                { path: 'authorId', select: 'fullName email avatar' },
-                { path: 'tournamentId', select: 'name status logo' },
-                { path: 'comments.userId', select: 'fullName avatar' }
+                { path: 'authorId', select: 'fullName email' },
+                { path: 'tournamentId', select: 'name status' }
             ]);
 
             res.json({
@@ -166,12 +135,9 @@ class NewsController {
     static async updateNews(req, res) {
         try {
             const { id } = req.params;
-            const updateData = req.body;
-
-            // Remove fields that shouldn't be updated
-            delete updateData.authorId;
-            delete updateData.views;
-            delete updateData.likes;
+            const allowed = ['title', 'content', 'tournamentId', 'images', 'status', 'publishedAt'];
+            const updateData = {};
+            for (const k of allowed) if (req.body[k] !== undefined) updateData[k] = req.body[k];
 
             const news = await News.findByIdAndUpdate(
                 id,
@@ -196,7 +162,7 @@ class NewsController {
             });
         } catch (error) {
             console.error('Update news error:', error);
-            
+
             if (error.name === 'ValidationError') {
                 const errors = Object.values(error.errors).map(err => err.message);
                 return res.status(400).json({
@@ -245,16 +211,17 @@ class NewsController {
         try {
             const { id } = req.params;
 
-            const news = await News.findById(id);
+            const news = await News.findByIdAndUpdate(
+                id,
+                { status: 'public', publishedAt: new Date() },
+                { new: true }
+            );
             if (!news) {
                 return res.status(404).json({
                     success: false,
                     message: 'News article not found'
                 });
             }
-
-            await news.publish();
-
             res.json({
                 success: true,
                 message: 'News article published successfully',
@@ -275,16 +242,12 @@ class NewsController {
             const { tournamentId } = req.params;
             const { page = 1, limit = 10 } = req.query;
 
-            const news = await News.findByTournament(tournamentId)
-                .populate('authorId', 'fullName email avatar')
+            const news = await News.find({ tournamentId, status: 'public' })
+                .populate('authorId', 'fullName email')
                 .limit(limit * 1)
                 .skip((page - 1) * limit);
 
-            const total = await News.countDocuments({ 
-                tournamentId,
-                status: 'published',
-                isPublic: true 
-            });
+            const total = await News.countDocuments({ tournamentId, status: 'public' });
 
             res.json({
                 success: true,
@@ -311,9 +274,10 @@ class NewsController {
         try {
             const { limit = 5 } = req.query;
 
-            const news = await News.findFeatured()
-                .populate('authorId', 'fullName email avatar')
-                .populate('tournamentId', 'name status logo')
+            const news = await News.find({ status: 'public' })
+                .populate('authorId', 'fullName email')
+                .populate('tournamentId', 'name status')
+                .sort({ publishedAt: -1, _id: -1 })
                 .limit(parseInt(limit));
 
             res.json({
@@ -333,34 +297,9 @@ class NewsController {
     static async addComment(req, res) {
         try {
             const { id } = req.params;
-            const { content } = req.body;
-
-            if (!content || content.trim().length === 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Comment content is required'
-                });
-            }
-
-            const news = await News.findById(id);
-            if (!news) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'News article not found'
-                });
-            }
-
-            await news.addComment(req.user._id, content.trim());
-
-            // Populate the newly added comment
-            await news.populate('comments.userId', 'fullName avatar');
-
-            res.status(201).json({
-                success: true,
-                message: 'Comment added successfully',
-                data: { 
-                    comment: news.comments[news.comments.length - 1]
-                }
+            return res.status(400).json({
+                success: false,
+                message: 'Comments are not supported by current schema'
             });
         } catch (error) {
             console.error('Add comment error:', error);
@@ -376,20 +315,9 @@ class NewsController {
         try {
             const { id } = req.params;
 
-            const news = await News.findById(id);
-            if (!news) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'News article not found'
-                });
-            }
-
-            await news.toggleLike();
-
-            res.json({
-                success: true,
-                message: 'News article liked successfully',
-                data: { likes: news.likes }
+            return res.status(400).json({
+                success: false,
+                message: 'Likes are not supported by current schema'
             });
         } catch (error) {
             console.error('Like news error:', error);
@@ -412,9 +340,15 @@ class NewsController {
                 });
             }
 
-            const news = await News.searchByTitle(q.trim())
-                .populate('authorId', 'fullName email avatar')
-                .populate('tournamentId', 'name status logo')
+            const news = await News.find({
+                status: 'public',
+                $or: [
+                    { title: { $regex: q.trim(), $options: 'i' } },
+                    { content: { $regex: q.trim(), $options: 'i' } }
+                ]
+            })
+                .populate('authorId', 'fullName email')
+                .populate('tournamentId', 'name status')
                 .limit(limit * 1)
                 .skip((page - 1) * limit);
 
@@ -437,8 +371,8 @@ class NewsController {
             const { authorId } = req.params;
             const { page = 1, limit = 10 } = req.query;
 
-            const news = await News.findByAuthor(authorId)
-                .populate('tournamentId', 'name status logo')
+            const news = await News.find({ authorId })
+                .populate('tournamentId', 'name status')
                 .limit(limit * 1)
                 .skip((page - 1) * limit);
 

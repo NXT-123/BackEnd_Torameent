@@ -4,47 +4,22 @@ class HighlightController {
     // Create new highlight
     static async createHighlight(req, res) {
         try {
-            const {
-                title,
-                description,
-                url,
-                tournamentId,
-                matchId,
-                type = 'video',
-                duration,
-                thumbnail,
-                platform = 'custom',
-                externalId,
-                tags = [],
-                creatorName,
-                isFeatured = false,
-                metadata = {}
-            } = req.body;
+            const { title, description, videoUrl, tournamentId, matchId, status } = req.body;
 
             const highlight = new Highlight({
                 title,
                 description,
-                url,
+                videoUrl,
                 tournamentId,
                 matchId,
-                type,
-                duration: duration || 0,
-                thumbnail,
-                platform,
-                externalId,
-                tags,
-                creatorId: req.user._id,
-                creatorName: creatorName || req.user.fullName,
-                isFeatured,
-                metadata
+                status
             });
 
             await highlight.save();
 
             const populatedHighlight = await Highlight.findById(highlight._id)
-                .populate('tournamentId', 'name status logo')
-                .populate('matchId', 'teamAId teamBId scheduleAt')
-                .populate('creatorId', 'fullName email');
+                .populate('tournamentId', 'name status')
+                .populate('matchId', 'teamA teamB scheduledAt');
 
             res.status(201).json({
                 success: true,
@@ -53,7 +28,7 @@ class HighlightController {
             });
         } catch (error) {
             console.error('Create highlight error:', error);
-            
+
             if (error.name === 'ValidationError') {
                 const errors = Object.values(error.errors).map(err => err.message);
                 return res.status(400).json({
@@ -73,45 +48,30 @@ class HighlightController {
     // Get all highlights with filtering and pagination
     static async getAllHighlights(req, res) {
         try {
-            const { 
-                page = 1, 
-                limit = 10, 
+            const {
+                page = 1,
+                limit = 10,
                 tournamentId,
                 matchId,
-                type,
-                platform,
-                search,
-                sortBy = 'publishedAt',
-                sortOrder = 'desc'
+                search
             } = req.query;
 
-            const query = { 
-                status: 'published',
-                isPublic: true 
-            };
+            const query = { status: 'public' };
 
             // Add filters
             if (tournamentId) query.tournamentId = tournamentId;
             if (matchId) query.matchId = matchId;
-            if (type) query.type = type;
-            if (platform) query.platform = platform;
             if (search) {
                 query.$or = [
                     { title: { $regex: search, $options: 'i' } },
-                    { description: { $regex: search, $options: 'i' } },
-                    { tags: { $in: [new RegExp(search, 'i')] } }
+                    { description: { $regex: search, $options: 'i' } }
                 ];
             }
 
-            // Sort configuration
-            const sortConfig = {};
-            sortConfig[sortBy] = sortOrder === 'desc' ? -1 : 1;
-
             const highlights = await Highlight.find(query)
-                .populate('tournamentId', 'name status logo')
-                .populate('matchId', 'teamAId teamBId scheduleAt')
-                .populate('creatorId', 'fullName email avatar')
-                .sort(sortConfig)
+                .populate('tournamentId', 'name status')
+                .populate('matchId', 'teamA teamB scheduledAt')
+                .sort({ _id: -1 })
                 .limit(limit * 1)
                 .skip((page - 1) * limit);
 
@@ -143,9 +103,8 @@ class HighlightController {
             const { id } = req.params;
 
             const highlight = await Highlight.findById(id)
-                .populate('tournamentId', 'name status logo organizerId')
-                .populate('matchId', 'teamAId teamBId scheduleAt result')
-                .populate('creatorId', 'fullName email avatar');
+                .populate('tournamentId', 'name status')
+                .populate('matchId', 'teamA teamB scheduledAt');
 
             if (!highlight) {
                 return res.status(404).json({
@@ -154,8 +113,7 @@ class HighlightController {
                 });
             }
 
-            // Increment views
-            await highlight.incrementViews();
+            // No views field in current schema
 
             res.json({
                 success: true,
@@ -174,22 +132,17 @@ class HighlightController {
     static async updateHighlight(req, res) {
         try {
             const { id } = req.params;
-            const updateData = req.body;
-
-            // Remove fields that shouldn't be updated
-            delete updateData.creatorId;
-            delete updateData.views;
-            delete updateData.likes;
-            delete updateData.shares;
+            const allowed = ['title', 'description', 'videoUrl', 'tournamentId', 'matchId', 'status'];
+            const updateData = {};
+            for (const k of allowed) if (req.body[k] !== undefined) updateData[k] = req.body[k];
 
             const highlight = await Highlight.findByIdAndUpdate(
                 id,
                 updateData,
                 { new: true, runValidators: true }
             ).populate([
-                { path: 'tournamentId', select: 'name status logo' },
-                { path: 'matchId', select: 'teamAId teamBId scheduleAt' },
-                { path: 'creatorId', select: 'fullName email' }
+                { path: 'tournamentId', select: 'name status' },
+                { path: 'matchId', select: 'teamA teamB scheduledAt' }
             ]);
 
             if (!highlight) {
@@ -206,7 +159,7 @@ class HighlightController {
             });
         } catch (error) {
             console.error('Update highlight error:', error);
-            
+
             if (error.name === 'ValidationError') {
                 const errors = Object.values(error.errors).map(err => err.message);
                 return res.status(400).json({
@@ -259,19 +212,12 @@ class HighlightController {
             let query = { tournamentId };
             if (type) query.type = type;
 
-            const highlights = await Highlight.findByTournament(tournamentId)
-                .find(type ? { type } : {})
-                .populate('matchId', 'teamAId teamBId scheduleAt')
-                .populate('creatorId', 'fullName email avatar')
+            const highlights = await Highlight.find({ tournamentId, status: 'public' })
+                .populate('matchId', 'teamA teamB scheduledAt')
                 .limit(limit * 1)
                 .skip((page - 1) * limit);
 
-            const total = await Highlight.countDocuments({ 
-                tournamentId,
-                status: 'published',
-                isPublic: true,
-                ...(type && { type })
-            });
+            const total = await Highlight.countDocuments({ tournamentId, status: 'public' });
 
             res.json({
                 success: true,
@@ -298,9 +244,8 @@ class HighlightController {
         try {
             const { matchId } = req.params;
 
-            const highlights = await Highlight.findByMatch(matchId)
-                .populate('tournamentId', 'name status logo')
-                .populate('creatorId', 'fullName email avatar');
+            const highlights = await Highlight.find({ matchId, status: 'public' })
+                .populate('tournamentId', 'name status');
 
             res.json({
                 success: true,
@@ -320,10 +265,10 @@ class HighlightController {
         try {
             const { limit = 5 } = req.query;
 
-            const highlights = await Highlight.findFeatured()
-                .populate('tournamentId', 'name status logo')
-                .populate('matchId', 'teamAId teamBId scheduleAt')
-                .populate('creatorId', 'fullName email avatar')
+            const highlights = await Highlight.find({ status: 'public' })
+                .populate('tournamentId', 'name status')
+                .populate('matchId', 'teamA teamB scheduledAt')
+                .sort({ _id: -1 })
                 .limit(parseInt(limit));
 
             res.json({
@@ -344,10 +289,11 @@ class HighlightController {
         try {
             const { limit = 10 } = req.query;
 
-            const highlights = await Highlight.findPopular(parseInt(limit))
-                .populate('tournamentId', 'name status logo')
-                .populate('matchId', 'teamAId teamBId scheduleAt')
-                .populate('creatorId', 'fullName email avatar');
+            const highlights = await Highlight.find({ status: 'public' })
+                .populate('tournamentId', 'name status')
+                .populate('matchId', 'teamA teamB scheduledAt')
+                .sort({ _id: -1 })
+                .limit(parseInt(limit));
 
             res.json({
                 success: true,
@@ -365,22 +311,9 @@ class HighlightController {
     // Like highlight
     static async likeHighlight(req, res) {
         try {
-            const { id } = req.params;
-
-            const highlight = await Highlight.findById(id);
-            if (!highlight) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Highlight not found'
-                });
-            }
-
-            await highlight.toggleLike();
-
-            res.json({
-                success: true,
-                message: 'Highlight liked successfully',
-                data: { likes: highlight.likes }
+            return res.status(400).json({
+                success: false,
+                message: 'Likes are not supported by current schema'
             });
         } catch (error) {
             console.error('Like highlight error:', error);
@@ -394,22 +327,9 @@ class HighlightController {
     // Share highlight
     static async shareHighlight(req, res) {
         try {
-            const { id } = req.params;
-
-            const highlight = await Highlight.findById(id);
-            if (!highlight) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Highlight not found'
-                });
-            }
-
-            await highlight.incrementShares();
-
-            res.json({
-                success: true,
-                message: 'Highlight shared successfully',
-                data: { shares: highlight.shares }
+            return res.status(400).json({
+                success: false,
+                message: 'Shares are not supported by current schema'
             });
         } catch (error) {
             console.error('Share highlight error:', error);
@@ -423,23 +343,9 @@ class HighlightController {
     // Set highlight as featured
     static async setFeatured(req, res) {
         try {
-            const { id } = req.params;
-            const { featured = true, featuredUntil } = req.body;
-
-            const highlight = await Highlight.findById(id);
-            if (!highlight) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Highlight not found'
-                });
-            }
-
-            await highlight.setFeatured(featured, featuredUntil ? new Date(featuredUntil) : null);
-
-            res.json({
-                success: true,
-                message: `Highlight ${featured ? 'featured' : 'unfeatured'} successfully`,
-                data: { highlight }
+            return res.status(400).json({
+                success: false,
+                message: 'Featured flag is not supported by current schema'
             });
         } catch (error) {
             console.error('Set featured highlight error:', error);
@@ -453,26 +359,10 @@ class HighlightController {
     // Attach highlight to match
     static async attachToMatch(req, res) {
         try {
-            const { id } = req.params;
-            const { matchId } = req.body;
-
-            const highlight = await Highlight.findById(id);
-            if (!highlight) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'Highlight not found'
-                });
-            }
-
-            await highlight.attachToMatch(matchId);
-
-            const populatedHighlight = await Highlight.findById(id)
-                .populate('matchId', 'teamAId teamBId scheduleAt result');
-
-            res.json({
-                success: true,
-                message: 'Highlight attached to match successfully',
-                data: { highlight: populatedHighlight }
+            // In current schema, we can update matchId directly via update endpoint. Keep this route unsupported
+            return res.status(400).json({
+                success: false,
+                message: 'Attach to match not supported; update highlight with matchId instead'
             });
         } catch (error) {
             console.error('Attach highlight to match error:', error);
@@ -495,10 +385,15 @@ class HighlightController {
                 });
             }
 
-            const highlights = await Highlight.searchByTitle(q.trim())
-                .populate('tournamentId', 'name status logo')
-                .populate('matchId', 'teamAId teamBId scheduleAt')
-                .populate('creatorId', 'fullName email avatar')
+            const highlights = await Highlight.find({
+                status: 'public',
+                $or: [
+                    { title: { $regex: q.trim(), $options: 'i' } },
+                    { description: { $regex: q.trim(), $options: 'i' } }
+                ]
+            })
+                .populate('tournamentId', 'name status')
+                .populate('matchId', 'teamA teamB scheduledAt')
                 .limit(limit * 1)
                 .skip((page - 1) * limit);
 
@@ -518,32 +413,9 @@ class HighlightController {
     // Get highlights by type
     static async getHighlightsByType(req, res) {
         try {
-            const { type } = req.params;
-            const { page = 1, limit = 10 } = req.query;
-
-            const highlights = await Highlight.findByType(type)
-                .populate('tournamentId', 'name status logo')
-                .populate('matchId', 'teamAId teamBId scheduleAt')
-                .populate('creatorId', 'fullName email avatar')
-                .limit(limit * 1)
-                .skip((page - 1) * limit);
-
-            const total = await Highlight.countDocuments({ 
-                type,
-                status: 'published',
-                isPublic: true 
-            });
-
-            res.json({
-                success: true,
-                data: {
-                    highlights,
-                    pagination: {
-                        current: parseInt(page),
-                        pages: Math.ceil(total / limit),
-                        total
-                    }
-                }
+            return res.status(400).json({
+                success: false,
+                message: 'Filter by type is not supported by current schema'
             });
         } catch (error) {
             console.error('Get highlights by type error:', error);
@@ -560,15 +432,17 @@ class HighlightController {
             const { id } = req.params;
             const { status } = req.body;
 
-            const highlight = await Highlight.findById(id);
+            const highlight = await Highlight.findByIdAndUpdate(
+                id,
+                { status },
+                { new: true }
+            );
             if (!highlight) {
                 return res.status(404).json({
                     success: false,
                     message: 'Highlight not found'
                 });
             }
-
-            await highlight.updateStatus(status);
 
             res.json({
                 success: true,
