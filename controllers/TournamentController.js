@@ -230,7 +230,9 @@ class TournamentController {
                 name: name || req.user.fullName,
                 logoUrl,
                 description,
-                mail
+                mail,
+                tournamentId: id,
+                userId: req.user._id
             });
 
             await competitor.save();

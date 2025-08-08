@@ -50,10 +50,8 @@ Role: `user`, `organizer`, `admin`.
 
 ### Đăng ký
 
-```bash
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","fullName":"User","password":"123456","role":"organizer"}'
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3000/api/auth/register" -Method POST -ContentType "application/json" -Body '{"email":"user@example.com","fullName":"User","password":"123456","role":"organizer"}'
 ```
 
 Output mong muốn:
@@ -80,30 +78,23 @@ Output mong muốn:
 
 ### Đăng nhập
 
-```bash
-curl -X POST http://localhost:3000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"123456"}'
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3000/api/auth/login" -Method POST -ContentType "application/json" -Body '{"email":"user@example.com","password":"123456"}'
 ```
 
 Output mong muốn: giống đăng ký (trả về `user`, `token`, `refreshToken`).
 
 ### Lấy/Cập nhật hồ sơ, Đổi mật khẩu
 
-```bash
+```powershell
 # Lấy hồ sơ
-curl http://localhost:3000/api/auth/profile \
-  -H "Authorization: Bearer <token>"
+Invoke-RestMethod -Uri "http://localhost:3000/api/auth/profile" -Method GET -Headers @{"Authorization"="Bearer <token>"}
 
 # Cập nhật hồ sơ
-curl -X PUT http://localhost:3000/api/auth/profile \
-  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{"fullName":"New Name","avatarUrl":"https://..."}'
+Invoke-RestMethod -Uri "http://localhost:3000/api/auth/profile" -Method PUT -ContentType "application/json" -Headers @{"Authorization"="Bearer <token>"} -Body '{"fullName":"New Name","avatarUrl":"https://..."}'
 
 # Đổi mật khẩu
-curl -X PUT http://localhost:3000/api/auth/change-password \
-  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{"currentPassword":"123456","newPassword":"654321"}'
+Invoke-RestMethod -Uri "http://localhost:3000/api/auth/change-password" -Method PUT -ContentType "application/json" -Headers @{"Authorization"="Bearer <token>"} -Body '{"currentPassword":"123456","newPassword":"654321"}'
 ```
 
 Output mong muốn (ví dụ cập nhật):
@@ -122,10 +113,8 @@ Model hiện có: `name`, `gameName`, `format`, `description`, `organizerId`, `c
 
 ### Tạo giải (organizer/admin)
 
-```bash
-curl -X POST http://localhost:3000/api/tournaments \
-  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{"name":"Summer Cup","gameName":"Valorant","format":"single-elimination","description":"...","avatarUrl":"https://...","startDate":"2025-09-01","endDate":"2025-09-30","maxPlayers":16}'
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3000/api/tournaments" -Method POST -ContentType "application/json" -Headers @{"Authorization"="Bearer <token>"} -Body '{"name":"Summer Cup","gameName":"Valorant","format":"single-elimination","description":"...","avatarUrl":"https://...","startDate":"2025-09-01","endDate":"2025-09-30","maxPlayers":16}'
 ```
 
 Output mong muốn:
@@ -140,9 +129,9 @@ Output mong muốn:
 
 ### Danh sách / Chi tiết
 
-```bash
-curl "http://localhost:3000/api/tournaments?page=1&limit=10&status=upcoming&search=summer"
-curl http://localhost:3000/api/tournaments/<id>
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3000/api/tournaments?page=1&limit=10&status=upcoming&search=summer" -Method GET
+Invoke-RestMethod -Uri "http://localhost:3000/api/tournaments/<id>" -Method GET
 ```
 
 Output mong muốn (list):
@@ -159,19 +148,15 @@ Output mong muốn (list):
 
 ### Người tham gia, Đăng ký/Rút
 
-```bash
+```powershell
 # Danh sách thí sinh
-curl http://localhost:3000/api/tournaments/<id>/participants
+Invoke-RestMethod -Uri "http://localhost:3000/api/tournaments/<id>/participants" -Method GET
 
 # Đăng ký tham gia (auth)
-curl -X POST http://localhost:3000/api/tournaments/<id>/register \
-  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{"name":"My Team","logoUrl":"https://...","description":"...","mail":"team@example.com"}'
+Invoke-RestMethod -Uri "http://localhost:3000/api/tournaments/<id>/register" -Method POST -ContentType "application/json" -Headers @{"Authorization"="Bearer <token>"} -Body '{"name":"My Team","logoUrl":"https://...","description":"...","mail":"team@example.com"}'
 
 # Rút khỏi giải (auth) — yêu cầu competitorId
-curl -X DELETE http://localhost:3000/api/tournaments/<id>/withdraw \
-  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{"competitorId":"<competitorId>"}'
+Invoke-RestMethod -Uri "http://localhost:3000/api/tournaments/<id>/withdraw" -Method DELETE -ContentType "application/json" -Headers @{"Authorization"="Bearer <token>"} -Body '{"competitorId":"<competitorId>"}'
 ```
 
 Output mong muốn (đăng ký):
@@ -186,17 +171,12 @@ Output mong muốn (đăng ký):
 
 ### Cập nhật/Xóa/Trạng thái
 
-```bash
-curl -X PUT http://localhost:3000/api/tournaments/<id> \
-  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{"description":"Updated"}'
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3000/api/tournaments/<id>" -Method PUT -ContentType "application/json" -Headers @{"Authorization"="Bearer <token>"} -Body '{"description":"Updated"}'
 
-curl -X DELETE http://localhost:3000/api/tournaments/<id> \
-  -H "Authorization: Bearer <token)"
+Invoke-RestMethod -Uri "http://localhost:3000/api/tournaments/<id>" -Method DELETE -Headers @{"Authorization"="Bearer <token>"}
 
-curl -X PUT http://localhost:3000/api/tournaments/<id>/status \
-  -H "Authorization: Bearer <token)" -H "Content-Type: application/json" \
-  -d '{"status":"ongoing"}'
+Invoke-RestMethod -Uri "http://localhost:3000/api/tournaments/<id>/status" -Method PUT -ContentType "application/json" -Headers @{"Authorization"="Bearer <token>"} -Body '{"status":"ongoing"}'
 ```
 
 Output mong muốn (trạng thái):
@@ -207,9 +187,9 @@ Output mong muốn (trạng thái):
 
 ### Upcoming / Ongoing
 
-```bash
-curl http://localhost:3000/api/tournaments/upcoming
-curl http://localhost:3000/api/tournaments/ongoing
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3000/api/tournaments/upcoming" -Method GET
+Invoke-RestMethod -Uri "http://localhost:3000/api/tournaments/ongoing" -Method GET
 ```
 
 ## 🥊 Matches
@@ -218,10 +198,8 @@ Model hiện có: `tournamentId`, `teamA`, `teamB`, `scheduledAt`, `score.{a,b}`
 
 ### Tạo trận (organizer/admin)
 
-```bash
-curl -X POST http://localhost:3000/api/matches \
-  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{"tournamentId":"<tid>","teamA":"<cidA>","teamB":"<cidB>","scheduledAt":"2025-09-02T10:00:00Z"}'
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3000/api/matches" -Method POST -ContentType "application/json" -Headers @{"Authorization"="Bearer <token>"} -Body '{"tournamentId":"<tid>","teamA":"<cidA>","teamB":"<cidB>","scheduledAt":"2025-09-02T10:00:00Z"}'
 ```
 
 Output mong muốn:
@@ -232,26 +210,22 @@ Output mong muốn:
 
 ### Danh sách / Chi tiết
 
-```bash
-curl "http://localhost:3000/api/matches?page=1&limit=10&tournamentId=<tid>&status=pending"
-curl http://localhost:3000/api/matches/<mid>
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3000/api/matches?page=1&limit=10&tournamentId=<tid>&status=pending" -Method GET
+Invoke-RestMethod -Uri "http://localhost:3000/api/matches/<mid>" -Method GET
 ```
 
 ### Bắt đầu, Kết quả, Dời lịch
 
-```bash
+```powershell
 # Bắt đầu
-curl -X PUT http://localhost:3000/api/matches/<mid>/start -H "Authorization: Bearer <token>"
+Invoke-RestMethod -Uri "http://localhost:3000/api/matches/<mid>/start" -Method PUT -Headers @{"Authorization"="Bearer <token>"}
 
 # Cập nhật kết quả
-curl -X PUT http://localhost:3000/api/matches/<mid>/result \
-  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{"scoreA":2,"scoreB":1}'
+Invoke-RestMethod -Uri "http://localhost:3000/api/matches/<mid>/result" -Method PUT -ContentType "application/json" -Headers @{"Authorization"="Bearer <token>"} -Body '{"scoreA":2,"scoreB":1}'
 
 # Dời lịch
-curl -X PUT http://localhost:3000/api/matches/<mid>/reschedule \
-  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{"newDate":"2025-09-03T10:00:00Z"}'
+Invoke-RestMethod -Uri "http://localhost:3000/api/matches/<mid>/reschedule" -Method PUT -ContentType "application/json" -Headers @{"Authorization"="Bearer <token>"} -Body '{"newDate":"2025-09-03T10:00:00Z"}'
 ```
 
 Output mong muốn (kết quả):
@@ -262,11 +236,11 @@ Output mong muốn (kết quả):
 
 ### Theo giải/đội, Upcoming/Ongoing
 
-```bash
-curl "http://localhost:3000/api/matches/tournament/<tid>?page=1&limit=20"
-curl http://localhost:3000/api/matches/competitor/<cid>
-curl http://localhost:3000/api/matches/upcoming
-curl http://localhost:3000/api/matches/ongoing
+```powershell
+Invoke-RestMethod -Uri "http://localhost:3000/api/matches/tournament/<tid>?page=1&limit=20" -Method GET
+Invoke-RestMethod -Uri "http://localhost:3000/api/matches/competitor/<cid>" -Method GET
+Invoke-RestMethod -Uri "http://localhost:3000/api/matches/upcoming" -Method GET
+Invoke-RestMethod -Uri "http://localhost:3000/api/matches/ongoing" -Method GET
 ```
 
 Lưu ý: các route `addGame`, `cancel`, `postpone` hiện không hỗ trợ (trả 400).
@@ -275,30 +249,28 @@ Lưu ý: các route `addGame`, `cancel`, `postpone` hiện không hỗ trợ (tr
 
 Model hiện có: `tournamentId`, `title`, `content`, `images`, `authorId`, `publishedAt`, `status` (private|public).
 
-```bash
+```powershell
 # Tạo (organizer/admin)
-curl -X POST http://localhost:3000/api/news \
-  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{"title":"New","content":"...","tournamentId":"<tid>","images":["https://..."]}'
+Invoke-RestMethod -Uri "http://localhost:3000/api/news" -Method POST -ContentType "application/json" -Headers @{"Authorization"="Bearer <token>"} -Body '{"title":"New","content":"...","tournamentId":"<tid>","images":["https://..."]}'
 
 # Danh sách public
-curl "http://localhost:3000/api/news?page=1&limit=10&search=new"
+Invoke-RestMethod -Uri "http://localhost:3000/api/news?page=1&limit=10&search=new" -Method GET
 
 # Chi tiết
-curl http://localhost:3000/api/news/<nid>
+Invoke-RestMethod -Uri "http://localhost:3000/api/news/<nid>" -Method GET
 
 # Cập nhật/Xóa (organizer/admin)
-curl -X PUT http://localhost:3000/api/news/<nid> -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d '{"title":"Updated"}'
-curl -X DELETE http://localhost:3000/api/news/<nid> -H "Authorization: Bearer <token)"
+Invoke-RestMethod -Uri "http://localhost:3000/api/news/<nid>" -Method PUT -ContentType "application/json" -Headers @{"Authorization"="Bearer <token>"} -Body '{"title":"Updated"}'
+Invoke-RestMethod -Uri "http://localhost:3000/api/news/<nid>" -Method DELETE -Headers @{"Authorization"="Bearer <token>"}
 
 # Xuất bản (organizer/admin)
-curl -X PUT http://localhost:3000/api/news/<nid>/publish -H "Authorization: Bearer <token)"
+Invoke-RestMethod -Uri "http://localhost:3000/api/news/<nid>/publish" -Method PUT -Headers @{"Authorization"="Bearer <token>"}
 
 # Theo giải/featured/tìm kiếm/author
-curl "http://localhost:3000/api/news/tournament/<tid>?page=1&limit=10"
-curl "http://localhost:3000/api/news/featured?limit=5"
-curl "http://localhost:3000/api/news/search?q=new&page=1&limit=10"
-curl "http://localhost:3000/api/news/author/<uid>?page=1&limit=10"
+Invoke-RestMethod -Uri "http://localhost:3000/api/news/tournament/<tid>?page=1&limit=10" -Method GET
+Invoke-RestMethod -Uri "http://localhost:3000/api/news/featured?limit=5" -Method GET
+Invoke-RestMethod -Uri "http://localhost:3000/api/news/search?q=new&page=1&limit=10" -Method GET
+Invoke-RestMethod -Uri "http://localhost:3000/api/news/author/<uid>?page=1&limit=10" -Method GET
 ```
 
 Output mong muốn (publish):
@@ -313,27 +285,25 @@ Lưu ý: `comment`, `like` chưa hỗ trợ (trả 400).
 
 Model hiện có: `tournamentId`, `matchId`, `title`, `videoUrl`, `description`, `status` (private|public).
 
-```bash
+```powershell
 # Tạo (organizer/admin)
-curl -X POST http://localhost:3000/api/highlights \
-  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{"title":"Epic","description":"...","videoUrl":"https://...","tournamentId":"<tid>","matchId":"<mid>","status":"public"}'
+Invoke-RestMethod -Uri "http://localhost:3000/api/highlights" -Method POST -ContentType "application/json" -Headers @{"Authorization"="Bearer <token>"} -Body '{"title":"Epic","description":"...","videoUrl":"https://...","tournamentId":"<tid>","matchId":"<mid>","status":"public"}'
 
 # Danh sách public / Chi tiết
-curl "http://localhost:3000/api/highlights?page=1&limit=10&search=epic"
-curl http://localhost:3000/api/highlights/<hid>
+Invoke-RestMethod -Uri "http://localhost:3000/api/highlights?page=1&limit=10&search=epic" -Method GET
+Invoke-RestMethod -Uri "http://localhost:3000/api/highlights/<hid>" -Method GET
 
 # Cập nhật/Xóa/Trạng thái (organizer/admin)
-curl -X PUT http://localhost:3000/api/highlights/<hid> -H "Authorization: Bearer <token>" -H "Content-Type: application/json" -d '{"title":"Updated"}'
-curl -X DELETE http://localhost:3000/api/highlights/<hid> -H "Authorization: Bearer <token)"
-curl -X PUT http://localhost:3000/api/highlights/<hid>/status -H "Authorization: Bearer <token)" -H "Content-Type: application/json" -d '{"status":"private"}'
+Invoke-RestMethod -Uri "http://localhost:3000/api/highlights/<hid>" -Method PUT -ContentType "application/json" -Headers @{"Authorization"="Bearer <token>"} -Body '{"title":"Updated"}'
+Invoke-RestMethod -Uri "http://localhost:3000/api/highlights/<hid>" -Method DELETE -Headers @{"Authorization"="Bearer <token>"}
+Invoke-RestMethod -Uri "http://localhost:3000/api/highlights/<hid>/status" -Method PUT -ContentType "application/json" -Headers @{"Authorization"="Bearer <token>"} -Body '{"status":"private"}'
 
 # Theo giải / Theo trận / Featured / Popular / Search
-curl "http://localhost:3000/api/highlights/tournament/<tid>?page=1&limit=10"
-curl http://localhost:3000/api/highlights/match/<mid>
-curl "http://localhost:3000/api/highlights/featured?limit=5"
-curl "http://localhost:3000/api/highlights/popular?limit=10"
-curl "http://localhost:3000/api/highlights/search?q=epic&page=1&limit=10"
+Invoke-RestMethod -Uri "http://localhost:3000/api/highlights/tournament/<tid>?page=1&limit=10" -Method GET
+Invoke-RestMethod -Uri "http://localhost:3000/api/highlights/match/<mid>" -Method GET
+Invoke-RestMethod -Uri "http://localhost:3000/api/highlights/featured?limit=5" -Method GET
+Invoke-RestMethod -Uri "http://localhost:3000/api/highlights/popular?limit=10" -Method GET
+Invoke-RestMethod -Uri "http://localhost:3000/api/highlights/search?q=epic&page=1&limit=10" -Method GET
 ```
 
 Output mong muốn (status):
@@ -360,3 +330,5 @@ Khi lỗi:
 
 - Nếu gặp lỗi `Cannot find module 'express'`, hãy chạy `npm install` trước khi `npm run dev`.
 - Trên Windows PowerShell không cần dùng `| cat` để xem log.
+- Windows PowerShell dùng `Invoke-RestMethod` thay vì `curl`.
+- Thay `<token>`, `<id>`, `<tid>`, `<mid>`, `<nid>`, `<hid>`, `<cid>` bằng giá trị thực tế.

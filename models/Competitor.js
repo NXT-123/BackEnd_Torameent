@@ -13,6 +13,14 @@ const competitorSchema = new mongoose.Schema({
     },
     mail: {
         type: String
+    },
+    tournamentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tournament'
+    },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     }
 }, {
     timestamps: false
