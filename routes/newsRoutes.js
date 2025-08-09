@@ -7,7 +7,11 @@ const router = express.Router();
 // Public routes
 router.get('/', NewsController.getAllNews);
 router.get('/featured', NewsController.getFeaturedNews);
+router.get('/published', NewsController.getPublishedNews);
 router.get('/search', NewsController.searchNews);
+router.get('/stats', NewsController.getNewsStats);
+router.get('/category/:category', NewsController.getNewsByCategory);
+router.get('/tag/:tag', NewsController.getNewsByTag);
 router.get('/tournament/:tournamentId', NewsController.getNewsByTournament);
 router.get('/author/:authorId', NewsController.getNewsByAuthor);
 router.get('/:id', NewsController.getNewsById);

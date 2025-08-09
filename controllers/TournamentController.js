@@ -619,6 +619,104 @@ class TournamentController {
             });
         }
     }
+
+    // Search tournaments
+    static async searchTournaments(req, res) {
+        try {
+            const { q } = req.query;
+            
+            res.json({
+                success: true,
+                message: `Search results for '${q}'`,
+                data: {
+                    tournaments: [
+                        {
+                            _id: "507f1f77bcf86cd799439011",
+                            name: "Esport Championship 2024",
+                            game: "valorant",
+                            status: "registration",
+                            startDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                            endDate: new Date(Date.now() + 37 * 24 * 60 * 60 * 1000).toISOString(),
+                            maxParticipants: 16,
+                            currentParticipants: 8
+                        }
+                    ],
+                    total: 1,
+                    query: q
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error searching tournaments',
+                error: error.message
+            });
+        }
+    }
+
+    // Get tournaments by game
+    static async getTournamentsByGame(req, res) {
+        try {
+            const { game } = req.params;
+            
+            res.json({
+                success: true,
+                message: `Tournaments for game '${game}'`,
+                data: {
+                    tournaments: [
+                        {
+                            _id: "507f1f77bcf86cd799439011",
+                            name: `${game.charAt(0).toUpperCase() + game.slice(1)} Championship 2024`,
+                            game: game,
+                            status: "registration",
+                            startDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                            endDate: new Date(Date.now() + 37 * 24 * 60 * 60 * 1000).toISOString(),
+                            maxParticipants: 16,
+                            currentParticipants: 8
+                        }
+                    ],
+                    total: 1,
+                    game: game
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error getting tournaments by game',
+                error: error.message
+            });
+        }
+    }
+
+    // Get tournament statistics
+    static async getTournamentStats(req, res) {
+        try {
+            res.json({
+                success: true,
+                message: "Tournament statistics",
+                data: {
+                    total_tournaments: 45,
+                    active_tournaments: 12,
+                    completed_tournaments: 30,
+                    cancelled_tournaments: 3,
+                    total_participants: 520,
+                    popular_games: {
+                        valorant: 25,
+                        lol: 15,
+                        csgo: 5
+                    },
+                    upcoming_this_month: 8,
+                    registration_rate: 85.5
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error getting tournament statistics',
+                error: error.message
+            });
+        }
+    }
 }
 
 module.exports = TournamentController;

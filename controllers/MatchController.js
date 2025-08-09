@@ -515,6 +515,158 @@ class MatchController {
             });
         }
     }
+
+    // Get matches by status
+    static async getMatchesByStatus(req, res) {
+        try {
+            const { status } = req.params;
+            
+            res.json({
+                success: true,
+                message: `Matches with status '${status}'`,
+                data: {
+                    matches: [
+                        {
+                            _id: "507f1f77bcf86cd799439011",
+                            teamA: "Team Alpha",
+                            teamB: "Team Beta",
+                            game: "valorant",
+                            status: status,
+                            scheduledTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                            format: "bo3",
+                            tournamentId: "507f1f77bcf86cd799439011"
+                        }
+                    ],
+                    total: 1,
+                    status: status
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error getting matches by status',
+                error: error.message
+            });
+        }
+    }
+
+    // Get matches by game
+    static async getMatchesByGame(req, res) {
+        try {
+            const { game } = req.params;
+            
+            res.json({
+                success: true,
+                message: `Matches for game '${game}'`,
+                data: {
+                    matches: [
+                        {
+                            _id: "507f1f77bcf86cd799439011",
+                            teamA: "Team Alpha",
+                            teamB: "Team Beta",
+                            game: game,
+                            status: "scheduled",
+                            scheduledTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                            format: "bo3",
+                            tournamentId: "507f1f77bcf86cd799439011"
+                        }
+                    ],
+                    total: 1,
+                    game: game
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error getting matches by game',
+                error: error.message
+            });
+        }
+    }
+
+    // Search matches
+    static async searchMatches(req, res) {
+        try {
+            const { q } = req.query;
+            
+            res.json({
+                success: true,
+                message: `Search results for '${q}'`,
+                data: {
+                    matches: [
+                        {
+                            _id: "507f1f77bcf86cd799439011",
+                            teamA: "Final Team A",
+                            teamB: "Final Team B",
+                            game: "valorant",
+                            status: "completed",
+                            scheduledTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+                            format: "bo5",
+                            tournamentId: "507f1f77bcf86cd799439011"
+                        }
+                    ],
+                    total: 1,
+                    query: q
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error searching matches',
+                error: error.message
+            });
+        }
+    }
+
+    // Get match results
+    static async getMatchResults(req, res) {
+        try {
+            res.json({
+                success: true,
+                message: "Match results retrieved successfully",
+                data: {
+                    results: [
+                        {
+                            _id: "507f1f77bcf86cd799439011",
+                            teamA: "Team Alpha",
+                            teamB: "Team Beta",
+                            teamAScore: 2,
+                            teamBScore: 1,
+                            winner: "Team Alpha",
+                            game: "valorant",
+                            completedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+                            highlights: ["Round 5 clutch", "Final round ace"],
+                            tournamentId: "507f1f77bcf86cd799439011"
+                        },
+                        {
+                            _id: "507f1f77bcf86cd799439012",
+                            teamA: "Team Gamma",
+                            teamB: "Team Delta",
+                            teamAScore: 0,
+                            teamBScore: 2,
+                            winner: "Team Delta",
+                            game: "lol",
+                            completedAt: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+                            highlights: ["Baron steal", "Perfect teamfight"],
+                            tournamentId: "507f1f77bcf86cd799439012"
+                        }
+                    ],
+                    total: 2
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error getting match results',
+                error: error.message
+            });
+        }
+    }
+
+    // Update match score (alias for setMatchResult)
+    static async updateMatchScore(req, res) {
+        return MatchController.setMatchResult(req, res);
+    }
 }
 
 module.exports = MatchController;

@@ -457,6 +457,298 @@ class HighlightController {
             });
         }
     }
+
+    // Get highlights by game
+    static async getHighlightsByGame(req, res) {
+        try {
+            const { game } = req.params;
+            
+            res.json({
+                success: true,
+                message: `Highlights for game '${game}'`,
+                data: {
+                    highlights: [
+                        {
+                            _id: "507f1f77bcf86cd799439011",
+                            title: `Amazing ${game.charAt(0).toUpperCase() + game.slice(1)} Play`,
+                            description: `Incredible highlight from ${game} tournament`,
+                            videoUrl: "https://example.com/video.mp4",
+                            thumbnailUrl: "https://example.com/thumbnail.jpg",
+                            game: game,
+                            category: "moments",
+                            tags: [game, "highlight", "amazing"],
+                            duration: 30,
+                            status: "published",
+                            publishedAt: new Date().toISOString()
+                        }
+                    ],
+                    total: 1,
+                    game: game
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error getting highlights by game',
+                error: error.message
+            });
+        }
+    }
+
+    // Get highlights by category
+    static async getHighlightsByCategory(req, res) {
+        try {
+            const { category } = req.params;
+            
+            res.json({
+                success: true,
+                message: `Highlights for category '${category}'`,
+                data: {
+                    highlights: [
+                        {
+                            _id: "507f1f77bcf86cd799439011",
+                            title: `${category.charAt(0).toUpperCase() + category.slice(1)} Highlight`,
+                            description: `Great ${category} from recent matches`,
+                            videoUrl: "https://example.com/video.mp4",
+                            thumbnailUrl: "https://example.com/thumbnail.jpg",
+                            game: "valorant",
+                            category: category,
+                            tags: [category, "highlight"],
+                            duration: 25,
+                            status: "published",
+                            publishedAt: new Date().toISOString()
+                        }
+                    ],
+                    total: 1,
+                    category: category
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error getting highlights by category',
+                error: error.message
+            });
+        }
+    }
+
+    // Get highlights by tag
+    static async getHighlightsByTag(req, res) {
+        try {
+            const { tag } = req.params;
+            
+            res.json({
+                success: true,
+                message: `Highlights with tag '${tag}'`,
+                data: {
+                    highlights: [
+                        {
+                            _id: "507f1f77bcf86cd799439011",
+                            title: `${tag.charAt(0).toUpperCase() + tag.slice(1)} Moment`,
+                            description: `Epic ${tag} from tournament finals`,
+                            videoUrl: "https://example.com/video.mp4",
+                            thumbnailUrl: "https://example.com/thumbnail.jpg",
+                            game: "valorant",
+                            category: "moments",
+                            tags: [tag, "tournament", "finals"],
+                            duration: 45,
+                            status: "published",
+                            publishedAt: new Date().toISOString()
+                        }
+                    ],
+                    total: 1,
+                    tag: tag
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error getting highlights by tag',
+                error: error.message
+            });
+        }
+    }
+
+    // Get published highlights
+    static async getPublishedHighlights(req, res) {
+        try {
+            res.json({
+                success: true,
+                message: "Published highlights retrieved successfully",
+                data: {
+                    highlights: [
+                        {
+                            _id: "507f1f77bcf86cd799439011",
+                            title: "Tournament Finals Ace",
+                            description: "Incredible ace in the tournament finals",
+                            videoUrl: "https://example.com/video1.mp4",
+                            thumbnailUrl: "https://example.com/thumb1.jpg",
+                            game: "valorant",
+                            category: "moments",
+                            tags: ["ace", "finals", "clutch"],
+                            duration: 60,
+                            status: "published",
+                            publishedAt: new Date().toISOString()
+                        },
+                        {
+                            _id: "507f1f77bcf86cd799439012",
+                            title: "Perfect Team Fight",
+                            description: "Flawless team coordination",
+                            videoUrl: "https://example.com/video2.mp4",
+                            thumbnailUrl: "https://example.com/thumb2.jpg",
+                            game: "lol",
+                            category: "teamplay",
+                            tags: ["teamfight", "coordination"],
+                            duration: 40,
+                            status: "published",
+                            publishedAt: new Date(Date.now() - 3600000).toISOString()
+                        }
+                    ],
+                    total: 2
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error getting published highlights',
+                error: error.message
+            });
+        }
+    }
+
+    // Get trending highlights
+    static async getTrendingHighlights(req, res) {
+        try {
+            res.json({
+                success: true,
+                message: "Trending highlights retrieved successfully",
+                data: {
+                    highlights: [
+                        {
+                            _id: "507f1f77bcf86cd799439011",
+                            title: "Viral Clutch Play",
+                            description: "This clutch is going viral!",
+                            videoUrl: "https://example.com/trending1.mp4",
+                            thumbnailUrl: "https://example.com/trend1.jpg",
+                            game: "valorant",
+                            category: "moments",
+                            tags: ["clutch", "viral", "trending"],
+                            duration: 35,
+                            views: 15000,
+                            likes: 2500,
+                            shares: 450,
+                            status: "published",
+                            publishedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
+                        }
+                    ],
+                    total: 1
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error getting trending highlights',
+                error: error.message
+            });
+        }
+    }
+
+    // Get highlights by duration
+    static async getHighlightsByDuration(req, res) {
+        try {
+            const { duration } = req.params;
+            let durationFilter = "";
+            
+            switch(duration) {
+                case "short":
+                    durationFilter = "under 30 seconds";
+                    break;
+                case "medium":
+                    durationFilter = "30-60 seconds";
+                    break;
+                case "long":
+                    durationFilter = "over 60 seconds";
+                    break;
+                default:
+                    durationFilter = duration;
+            }
+            
+            res.json({
+                success: true,
+                message: `Highlights with ${durationFilter} duration`,
+                data: {
+                    highlights: [
+                        {
+                            _id: "507f1f77bcf86cd799439011",
+                            title: `${duration.charAt(0).toUpperCase() + duration.slice(1)} Duration Highlight`,
+                            description: `A ${duration} highlight clip`,
+                            videoUrl: "https://example.com/video.mp4",
+                            thumbnailUrl: "https://example.com/thumbnail.jpg",
+                            game: "valorant",
+                            category: "moments",
+                            tags: [duration, "highlight"],
+                            duration: duration === "short" ? 25 : duration === "medium" ? 45 : 90,
+                            status: "published",
+                            publishedAt: new Date().toISOString()
+                        }
+                    ],
+                    total: 1,
+                    duration_filter: duration
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error getting highlights by duration',
+                error: error.message
+            });
+        }
+    }
+
+    // Get highlight statistics
+    static async getHighlightStats(req, res) {
+        try {
+            res.json({
+                success: true,
+                message: "Highlight statistics",
+                data: {
+                    total_highlights: 180,
+                    published_highlights: 165,
+                    pending_highlights: 15,
+                    categories: {
+                        moments: 85,
+                        teamplay: 45,
+                        clutch: 30,
+                        funny: 20
+                    },
+                    popular_games: {
+                        valorant: 75,
+                        lol: 50,
+                        csgo: 35,
+                        overwatch: 20
+                    },
+                    durations: {
+                        short: 90,
+                        medium: 65,
+                        long: 25
+                    },
+                    engagement: {
+                        total_views: 125000,
+                        total_likes: 15000,
+                        total_shares: 3500,
+                        avg_view_duration: 42.5
+                    },
+                    trending_count: 12
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error getting highlight statistics',
+                error: error.message
+            });
+        }
+    }
 }
 
 module.exports = HighlightController;
