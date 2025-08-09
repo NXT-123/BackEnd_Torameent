@@ -12,7 +12,7 @@ function Show-Response {
     Write-Host ""
     Write-Host "=== $Name ===" -ForegroundColor Cyan
     
-    if ($Response -eq $null) {
+    if ($null -eq $Response) {
         Write-Host "No data returned" -ForegroundColor Red
         return
     }
@@ -27,10 +27,11 @@ function Show-Response {
         foreach ($prop in $properties) {
             $value = $Response.$prop
             
-            if ($value -eq $null) {
-                Write-Host "$prop: null" -ForegroundColor Gray
-            } elseif ($value.GetType().IsArray) {
-                Write-Host "$prop: Array with $($value.Count) items" -ForegroundColor Green
+            if ($null -eq $value) {
+                Write-Host "${prop}:: null" -ForegroundColor Gray
+            }
+            elseif ($value.GetType().IsArray) {
+                Write-Host "${prop}: Array with $($value.Count) items" -ForegroundColor Green
                 
                 if ($value.Count -gt 0) {
                     Write-Host "Sample data from first item:" -ForegroundColor Cyan
@@ -38,9 +39,10 @@ function Show-Response {
                     if ($firstItem.GetType().Name -eq "PSCustomObject") {
                         $itemProps = $firstItem | Get-Member -MemberType Properties | Select-Object -First 5 -ExpandProperty Name
                         foreach ($itemProp in $itemProps) {
-                            Write-Host "  $itemProp: $($firstItem.$itemProp)" -ForegroundColor White
+                            Write-Host "  ${itemProp}: $($firstItem.$itemProp)" -ForegroundColor White
                         }
-                    } else {
+                    }
+                    else {
                         Write-Host "  $firstItem" -ForegroundColor White
                     }
                     
@@ -48,17 +50,20 @@ function Show-Response {
                         Write-Host "  ... and $($value.Count - 1) more items" -ForegroundColor Gray
                     }
                 }
-            } elseif ($value.GetType().Name -eq "PSCustomObject") {
-                Write-Host "$prop: Object with properties:" -ForegroundColor Green
+            }
+            elseif ($value.GetType().Name -eq "PSCustomObject") {
+                Write-Host "${prop}: Object with properties:" -ForegroundColor Green
                 $subProps = $value | Get-Member -MemberType Properties | Select-Object -ExpandProperty Name
                 foreach ($subProp in $subProps) {
-                    Write-Host "  $subProp: $($value.$subProp)" -ForegroundColor White
+                    Write-Host "  ${subProp}: $($value.$subProp)" -ForegroundColor White
                 }
-            } else {
-                Write-Host "$prop: $value" -ForegroundColor White
+            }
+            else {
+                Write-Host "${prop}: $value" -ForegroundColor White
             }
         }
-    } else {
+    }
+    else {
         Write-Host "Raw data: $Response" -ForegroundColor White
     }
     
@@ -81,7 +86,8 @@ function Test-API {
         
         Show-Response -Response $response -Name $Name
         
-    } catch {
+    }
+    catch {
         Write-Host "ERROR: $($_.Exception.Message)" -ForegroundColor Red
         Write-Host "Status Code: $($_.Exception.Response.StatusCode.value__)" -ForegroundColor Red
     }
@@ -107,10 +113,10 @@ Write-Host ""
 Write-Host "=== QUICK SUMMARY ===" -ForegroundColor Cyan
 
 $endpoints = @(
-    @{Name="Tournaments"; Url="$BaseUrl/api/tournaments"},
-    @{Name="News"; Url="$BaseUrl/api/news"},
-    @{Name="Matches"; Url="$BaseUrl/api/matches"},
-    @{Name="Highlights"; Url="$BaseUrl/api/highlights"}
+    @{Name = "Tournaments"; Url = "$BaseUrl/api/tournaments" },
+    @{Name = "News"; Url = "$BaseUrl/api/news" },
+    @{Name = "Matches"; Url = "$BaseUrl/api/matches" },
+    @{Name = "Highlights"; Url = "$BaseUrl/api/highlights" }
 )
 
 foreach ($endpoint in $endpoints) {
@@ -119,7 +125,8 @@ foreach ($endpoint in $endpoints) {
         $dataKey = $endpoint.Name.ToLower()
         if ($response.$dataKey) {
             Write-Host "$($endpoint.Name): $($response.$dataKey.Count) items" -ForegroundColor Green
-        } else {
+        }
+        else {
             # Try common property names
             $found = $false
             foreach ($key in @("data", "results", "items")) {
@@ -134,7 +141,8 @@ foreach ($endpoint in $endpoints) {
                 Write-Host "$($endpoint.Name): Response has properties: $($props -join ', ')" -ForegroundColor Yellow
             }
         }
-    } catch {
+    }
+    catch {
         Write-Host "$($endpoint.Name): Error - $($_.Exception.Message)" -ForegroundColor Red
     }
 }

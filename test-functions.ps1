@@ -31,7 +31,7 @@ function Show-DetailedResponse {
     Write-ColorOutput "`n$Title" "Cyan"
     Write-ColorOutput "=" * 50 "Cyan"
     
-    if ($Response -eq $null) {
+    if ($null -eq $Response) {
         Write-ColorOutput "No data available" "Yellow"
         return
     }
@@ -43,26 +43,31 @@ function Show-DetailedResponse {
         foreach ($prop in $properties) {
             $value = $Response.$prop
             
-            if ($value -eq $null) {
+            if ($null -eq $value) {
                 Write-ColorOutput "$prop`: null" "Gray"
-            } elseif ($value.GetType().IsArray) {
+            }
+            elseif ($value.GetType().IsArray) {
                 Write-ColorOutput "$prop`: Array with $($value.Count) items" "Yellow"
                 if ($value.Count -gt 0 -and $value.Count -le 3) {
                     for ($i = 0; $i -lt $value.Count; $i++) {
                         Write-ColorOutput "  [$i]: $($value[$i] | ConvertTo-Json -Compress -Depth 1)" "White"
                     }
-                } elseif ($value.Count -gt 3) {
+                }
+                elseif ($value.Count -gt 3) {
                     Write-ColorOutput "  [0]: $($value[0] | ConvertTo-Json -Compress -Depth 1)" "White"
                     Write-ColorOutput "  ... and $($value.Count - 1) more items" "Gray"
                 }
-            } elseif ($value.GetType().Name -eq "PSCustomObject") {
+            }
+            elseif ($value.GetType().Name -eq "PSCustomObject") {
                 Write-ColorOutput "$prop`: Object" "Yellow"
                 Write-ColorOutput "  $($value | ConvertTo-Json -Compress -Depth 1)" "White"
-            } else {
+            }
+            else {
                 Write-ColorOutput "$prop`: $value" "White"
             }
         }
-    } else {
+    }
+    else {
         Write-ColorOutput "Raw Data: $($Response | ConvertTo-Json -Depth 2)" "White"
     }
     
@@ -81,8 +86,8 @@ function Test-Endpoint {
     
     try {
         $params = @{
-            Uri = $Url
-            Method = $Method
+            Uri     = $Url
+            Method  = $Method
             Headers = $Headers
         }
         
@@ -102,32 +107,38 @@ function Test-Endpoint {
                 # For objects with common API response structure
                 if ($response.data) {
                     Write-ColorOutput "   Data: $($response.data | ConvertTo-Json -Depth 3 -Compress)" "White"
-                } elseif ($response.tournaments) {
+                }
+                elseif ($response.tournaments) {
                     Write-ColorOutput "   Tournaments Count: $($response.tournaments.Count)" "Yellow"
                     if ($response.tournaments.Count -gt 0) {
                         Write-ColorOutput "   First Tournament: $($response.tournaments[0].name)" "White"
                     }
-                } elseif ($response.news) {
+                }
+                elseif ($response.news) {
                     Write-ColorOutput "   News Count: $($response.news.Count)" "Yellow"
                     if ($response.news.Count -gt 0) {
                         Write-ColorOutput "   First News: $($response.news[0].title)" "White"
                     }
-                } elseif ($response.matches) {
+                }
+                elseif ($response.matches) {
                     Write-ColorOutput "   Matches Count: $($response.matches.Count)" "Yellow"
                     if ($response.matches.Count -gt 0) {
                         Write-ColorOutput "   First Match: $($response.matches[0].teamA) vs $($response.matches[0].teamB)" "White"
                     }
-                } elseif ($response.highlights) {
+                }
+                elseif ($response.highlights) {
                     Write-ColorOutput "   Highlights Count: $($response.highlights.Count)" "Yellow"
                     if ($response.highlights.Count -gt 0) {
                         Write-ColorOutput "   First Highlight: $($response.highlights[0].title)" "White"
                     }
-                } elseif ($response.users) {
+                }
+                elseif ($response.users) {
                     Write-ColorOutput "   Users Count: $($response.users.Count)" "Yellow"
                     if ($response.users.Count -gt 0) {
                         Write-ColorOutput "   First User: $($response.users[0].email)" "White"
                     }
-                } else {
+                }
+                else {
                     # For simple responses or other structures
                     Write-ColorOutput "   Raw Response: $($response | ConvertTo-Json -Depth 2 -Compress)" "White"
                 }
@@ -136,7 +147,8 @@ function Test-Endpoint {
                 if ($response.pagination) {
                     Write-ColorOutput "   Pagination: Page $($response.pagination.page)/$($response.pagination.pages), Total: $($response.pagination.total)" "Yellow"
                 }
-            } else {
+            }
+            else {
                 Write-ColorOutput "   Response: $($response | ConvertTo-Json -Depth 2 -Compress)" "White"
             }
         }
@@ -163,8 +175,8 @@ function Test-EndpointDetailed {
     
     try {
         $params = @{
-            Uri = $Url
-            Method = $Method
+            Uri     = $Url
+            Method  = $Method
             Headers = $Headers
         }
         
@@ -181,7 +193,8 @@ function Test-EndpointDetailed {
         
         if ($response -and $ShowDetails) {
             Show-DetailedResponse -Response $response -Title "$Name Response"
-        } elseif ($response) {
+        }
+        elseif ($response) {
             # Quick summary
             if ($response.GetType().Name -eq "PSCustomObject") {
                 $properties = $response | Get-Member -MemberType Properties | Select-Object -ExpandProperty Name
@@ -215,17 +228,17 @@ function Test-AuthFunctions {
     
     # User Registration
     $userData = @{
-        email = "testuser@powershell.com"
+        email    = "testuser@powershell.com"
         password = "password123"
         fullName = "PowerShell Test User"
-        role = "user"
+        role     = "user"
     } | ConvertTo-Json
     
     Test-Endpoint "User Registration" "POST" "$BaseUrl/api/auth/register" $userData
     
     # User Login
     $loginData = @{
-        email = "testuser@esport.com"
+        email    = "testuser@esport.com"
         password = "password123"
     } | ConvertTo-Json
     
@@ -233,7 +246,7 @@ function Test-AuthFunctions {
     
     # Admin Login
     $adminData = @{
-        email = "admin@esport.com"
+        email    = "admin@esport.com"
         password = "admin123"
     } | ConvertTo-Json
     
@@ -241,7 +254,7 @@ function Test-AuthFunctions {
     
     # Organizer Login
     $organizerData = @{
-        email = "organizer@esport.com"
+        email    = "organizer@esport.com"
         password = "organizer123"
     } | ConvertTo-Json
     

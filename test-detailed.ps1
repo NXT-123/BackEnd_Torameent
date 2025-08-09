@@ -34,16 +34,19 @@ function Show-DataTable {
         
         if ($Properties.Count -gt 0) {
             $Data | Select-Object $Properties | Format-Table -AutoSize | Out-String | Write-Host
-        } else {
+        }
+        else {
             $Data | Format-Table -AutoSize | Out-String | Write-Host
         }
         
         Write-ColorOutput "Total items: $($Data.Count)" "Yellow"
-    } else {
+    }
+    else {
         # Single object
         if ($Properties.Count -gt 0) {
             $Data | Select-Object $Properties | Format-List | Out-String | Write-Host
-        } else {
+        }
+        else {
             $Data | Format-List | Out-String | Write-Host
         }
     }
@@ -64,8 +67,8 @@ function Test-WithDetails {
     
     try {
         $params = @{
-            Uri = $Url
-            Method = $Method
+            Uri     = $Url
+            Method  = $Method
             Headers = $Headers
         }
         
@@ -82,7 +85,7 @@ function Test-WithDetails {
         
         # Analyze and display response
         if ($response) {
-                         Write-ColorOutput "`nResponse Analysis:" "Cyan"
+            Write-ColorOutput "`nResponse Analysis:" "Cyan"
             
             # Check response type
             $responseType = $response.GetType().Name
@@ -96,9 +99,10 @@ function Test-WithDetails {
                 foreach ($prop in $properties) {
                     $value = $response.$prop
                     
-                    if ($value -eq $null) {
+                    if ($null -eq $value) {
                         Write-ColorOutput "$prop`: null" "Gray"
-                    } elseif ($value.GetType().IsArray) {
+                    }
+                    elseif ($value.GetType().IsArray) {
                         Write-ColorOutput "$prop`: Array[$($value.Count)]" "Yellow"
                         
                         # Show array contents
@@ -122,7 +126,8 @@ function Test-WithDetails {
                                 default {
                                     if ($value.Count -le 5) {
                                         $value | ForEach-Object { Write-ColorOutput "  - $($_)" "White" }
-                                    } else {
+                                    }
+                                    else {
                                         for ($i = 0; $i -lt 3; $i++) {
                                             Write-ColorOutput "  [$i] $($value[$i])" "White"
                                         }
@@ -131,23 +136,28 @@ function Test-WithDetails {
                                 }
                             }
                         }
-                    } elseif ($value.GetType().Name -eq "PSCustomObject") {
+                    }
+                    elseif ($value.GetType().Name -eq "PSCustomObject") {
                         Write-ColorOutput "$prop`: Object" "Yellow"
                         $value | Format-List | Out-String | Write-Host
-                    } else {
+                    }
+                    else {
                         Write-ColorOutput "$prop`: $value" "White"
                     }
                 }
-            } else {
+            }
+            else {
                 Write-ColorOutput "Raw Response:" "Yellow"
                 $response | Out-String | Write-Host
             }
-        } else {
+        }
+        else {
             Write-ColorOutput "No response data" "Yellow"
         }
         
         return $response
-    } catch {
+    }
+    catch {
         $stopwatch.Stop()
         $statusCode = $_.Exception.Response.StatusCode.value__
         $errorMessage = $_.Exception.Message
@@ -162,7 +172,8 @@ function Test-WithDetails {
                 if ($errorBody) {
                     Write-ColorOutput "Error Details: $errorBody" "Red"
                 }
-            } catch {
+            }
+            catch {
                 # Ignore if can't read error body
             }
         }
@@ -206,7 +217,7 @@ function Test-AuthenticationFlow {
     
     # User Login
     $loginData = @{
-        email = "testuser@esport.com"
+        email    = "testuser@esport.com"
         password = "password123"
     } | ConvertTo-Json
     
@@ -222,7 +233,7 @@ function Test-AuthenticationFlow {
     
     # Admin Login
     $adminData = @{
-        email = "admin@esport.com"
+        email    = "admin@esport.com"
         password = "admin123"
     } | ConvertTo-Json
     
@@ -243,10 +254,10 @@ function Show-QuickSummary {
     Write-ColorOutput "=" * 50 "Cyan"
     
     $endpoints = @(
-        @{Name="Tournaments"; Url="$BaseUrl/api/tournaments"; DataKey="tournaments"},
-        @{Name="News"; Url="$BaseUrl/api/news"; DataKey="news"},
-        @{Name="Matches"; Url="$BaseUrl/api/matches"; DataKey="matches"},
-        @{Name="Highlights"; Url="$BaseUrl/api/highlights"; DataKey="highlights"}
+        @{Name = "Tournaments"; Url = "$BaseUrl/api/tournaments"; DataKey = "tournaments" },
+        @{Name = "News"; Url = "$BaseUrl/api/news"; DataKey = "news" },
+        @{Name = "Matches"; Url = "$BaseUrl/api/matches"; DataKey = "matches" },
+        @{Name = "Highlights"; Url = "$BaseUrl/api/highlights"; DataKey = "highlights" }
     )
     
     foreach ($endpoint in $endpoints) {
@@ -255,10 +266,12 @@ function Show-QuickSummary {
             if ($response.($endpoint.DataKey)) {
                 $count = $response.($endpoint.DataKey).Count
                 Write-ColorOutput "$($endpoint.Name): $count items" "Green"
-            } else {
+            }
+            else {
                 Write-ColorOutput "$($endpoint.Name): No data or different structure" "Yellow"
             }
-        } catch {
+        }
+        catch {
             Write-ColorOutput "$($endpoint.Name): Error - $($_.Exception.Message)" "Red"
         }
     }

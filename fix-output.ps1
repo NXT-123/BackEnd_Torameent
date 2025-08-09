@@ -15,7 +15,7 @@ function Show-ApiData {
     Write-Host "`nTesting: $EndpointName" -ForegroundColor Cyan
     Write-Host "=" * 50 -ForegroundColor Cyan
     
-    if ($Response -eq $null) {
+    if ($null -eq $Response) {
         Write-Host "No data available" -ForegroundColor Red
         return
     }
@@ -33,9 +33,10 @@ function Show-ApiData {
         foreach ($prop in $properties) {
             $value = $Response.$prop
             
-            if ($value -eq $null) {
+            if ($null -eq $value) {
                 Write-Host "$prop`: (null)" -ForegroundColor Gray
-            } elseif ($value.GetType().IsArray) {
+            }
+            elseif ($value.GetType().IsArray) {
                 Write-Host "$prop`: Array with $($value.Count) items" -ForegroundColor Yellow
                 
                 # Hiển thị một vài items đầu
@@ -52,7 +53,8 @@ function Show-ApiData {
                                 $sampleData += "$sProp=$($item.$sProp)"
                             }
                             Write-Host "    [$i] $($sampleData -join ', ')" -ForegroundColor White
-                        } else {
+                        }
+                        else {
                             Write-Host "    [$i] $item" -ForegroundColor White
                         }
                     }
@@ -60,17 +62,20 @@ function Show-ApiData {
                         Write-Host "    ... and $($value.Count - 3) more items" -ForegroundColor Gray
                     }
                 }
-            } elseif ($value.GetType().Name -eq "PSCustomObject") {
+            }
+            elseif ($value.GetType().Name -eq "PSCustomObject") {
                 Write-Host "$prop`: Object" -ForegroundColor Yellow
                 $subProps = $value | Get-Member -MemberType Properties | Select-Object -ExpandProperty Name
                 foreach ($subProp in $subProps) {
                     Write-Host "    $subProp`: $($value.$subProp)" -ForegroundColor White
                 }
-            } else {
+            }
+            else {
                 Write-Host "$prop`: $value" -ForegroundColor White
             }
         }
-    } else {
+    }
+    else {
         Write-Host "Data: $Response" -ForegroundColor White
     }
     
@@ -97,7 +102,8 @@ function Test-ApiEndpoint {
         # Hiển thị data đúng cách
         Show-ApiData -Response $response -EndpointName $Name
         
-    } catch {
+    }
+    catch {
         Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
