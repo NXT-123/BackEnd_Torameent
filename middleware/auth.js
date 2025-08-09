@@ -23,6 +23,16 @@ const authenticateToken = async (req, res, next) => {
         // Verify token
         const decoded = jwt.verify(token, config.jwtSecret);
 
+        // If running in mock mode, trust payload without DB lookup
+        if (global.mockMode) {
+            req.user = {
+                _id: decoded.id,
+                role: decoded.role || 'user',
+                email: decoded.email || ''
+            };
+            return next();
+        }
+
         // Get user from database
         const user = await User.findById(decoded.id).select('-passwordHash');
         if (!user) {
@@ -31,8 +41,6 @@ const authenticateToken = async (req, res, next) => {
                 message: 'Invalid token. User not found.'
             });
         }
-
-        // Note: current schema does not have isActive. Proceed if user exists.
 
         // Add user to request object
         req.user = user;
@@ -134,10 +142,17 @@ const optionalAuth = async (req, res, next) => {
         if (token) {
             try {
                 const decoded = jwt.verify(token, config.jwtSecret);
-                const user = await User.findById(decoded.id).select('-passwordHash');
-
-                if (user && user.isActive) {
-                    req.user = user;
+                if (global.mockMode) {
+                    req.user = {
+                        _id: decoded.id,
+                        role: decoded.role || 'user',
+                        email: decoded.email || ''
+                    };
+                } else {
+                    const user = await User.findById(decoded.id).select('-passwordHash');
+                    if (user && user.isActive) {
+                        req.user = user;
+                    }
                 }
             } catch (error) {
                 // Token is invalid, but we continue without user
