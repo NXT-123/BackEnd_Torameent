@@ -19,11 +19,11 @@ function Show-DataTable {
     )
     
     if (-not $Data) {
-        Write-ColorOutput "❌ No data to display for $Title" "Red"
+        Write-ColorOutput "No data to display for $Title" "Red"
         return
     }
     
-    Write-ColorOutput "`n📋 $Title" "Cyan"
+    Write-ColorOutput "`n$Title" "Cyan"
     Write-ColorOutput "=" * 60 "Cyan"
     
     if ($Data.GetType().IsArray) {
@@ -59,7 +59,7 @@ function Test-WithDetails {
         [string]$Body = $null
     )
     
-    Write-ColorOutput "`n🔍 Testing: $EndpointName" "Cyan"
+    Write-ColorOutput "`nTesting: $EndpointName" "Cyan"
     Write-ColorOutput "URL: $Url" "Gray"
     
     try {
@@ -78,11 +78,11 @@ function Test-WithDetails {
         $response = Invoke-RestMethod @params -ErrorAction Stop
         $stopwatch.Stop()
         
-        Write-ColorOutput "✅ Success! Response time: $($stopwatch.ElapsedMilliseconds)ms" "Green"
+        Write-ColorOutput "SUCCESS! Response time: $($stopwatch.ElapsedMilliseconds)ms" "Green"
         
         # Analyze and display response
         if ($response) {
-            Write-ColorOutput "`n📊 Response Analysis:" "Cyan"
+                         Write-ColorOutput "`nResponse Analysis:" "Cyan"
             
             # Check response type
             $responseType = $response.GetType().Name
@@ -151,7 +151,7 @@ function Test-WithDetails {
         $stopwatch.Stop()
         $statusCode = $_.Exception.Response.StatusCode.value__
         $errorMessage = $_.Exception.Message
-        Write-ColorOutput "❌ Error: $statusCode - $errorMessage" "Red"
+        Write-ColorOutput "ERROR: $statusCode - $errorMessage" "Red"
         
         # Try to get more error details
         if ($_.Exception.Response) {
@@ -173,7 +173,7 @@ function Test-WithDetails {
 
 # Main testing functions
 function Test-AllEndpoints {
-    Write-ColorOutput "🚀 Starting Detailed Backend Testing..." "Cyan"
+    Write-ColorOutput "Starting Detailed Backend Testing..." "Cyan"
     Write-ColorOutput "Base URL: $BaseUrl" "Yellow"
     Write-ColorOutput "Show Details: $ShowDetails" "Yellow"
     
@@ -202,7 +202,7 @@ function Test-AllEndpoints {
 }
 
 function Test-AuthenticationFlow {
-    Write-ColorOutput "`n🔐 Testing Authentication Flow..." "Cyan"
+    Write-ColorOutput "`nTesting Authentication Flow..." "Cyan"
     
     # User Login
     $loginData = @{
@@ -239,7 +239,7 @@ function Test-AuthenticationFlow {
 }
 
 function Show-QuickSummary {
-    Write-ColorOutput "`n📋 Quick Data Summary" "Cyan"
+    Write-ColorOutput "`nQuick Data Summary" "Cyan"
     Write-ColorOutput "=" * 50 "Cyan"
     
     $endpoints = @(
@@ -279,6 +279,6 @@ switch ($TestType.ToLower()) {
     }
 }
 
-Write-ColorOutput "`n🎉 Detailed Testing Completed!" "Green"
+Write-ColorOutput "`nDetailed Testing Completed!" "Green"
 Write-ColorOutput "Use -ShowDetails for more detailed output" "Yellow"
 Write-ColorOutput "Use -TestType [all|endpoints|auth|summary] to run specific tests" "Yellow"

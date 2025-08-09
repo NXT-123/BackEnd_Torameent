@@ -28,7 +28,7 @@ function Show-DetailedResponse {
         [string]$Title = "Response Details"
     )
     
-    Write-ColorOutput "`n📊 $Title" "Cyan"
+    Write-ColorOutput "`n$Title" "Cyan"
     Write-ColorOutput "=" * 50 "Cyan"
     
     if ($Response -eq $null) {
@@ -93,7 +93,7 @@ function Test-Endpoint {
         
         $response = Invoke-RestMethod @params -ErrorAction Stop
         
-        Write-ColorOutput "✅ $Name`: Success" "Green"
+        Write-ColorOutput "SUCCESS $Name" "Green"
         if ($response) {
             # Display response data properly
             if ($response.GetType().Name -eq "PSCustomObject" -or $response.GetType().Name -eq "Hashtable") {
@@ -145,7 +145,7 @@ function Test-Endpoint {
     catch {
         $statusCode = $_.Exception.Response.StatusCode.value__
         $errorMessage = $_.Exception.Message
-        Write-ColorOutput "❌ $Name`: $statusCode - $errorMessage" "Red"
+        Write-ColorOutput "ERROR $Name - $statusCode - $errorMessage" "Red"
         return $false
     }
 }
@@ -177,7 +177,7 @@ function Test-EndpointDetailed {
         $response = Invoke-RestMethod @params -ErrorAction Stop
         $stopwatch.Stop()
         
-        Write-ColorOutput "✅ $Name`: Success ($($stopwatch.ElapsedMilliseconds)ms)" "Green"
+        Write-ColorOutput "SUCCESS $Name ($($stopwatch.ElapsedMilliseconds)ms)" "Green"
         
         if ($response -and $ShowDetails) {
             Show-DetailedResponse -Response $response -Title "$Name Response"
@@ -201,14 +201,14 @@ function Test-EndpointDetailed {
         $stopwatch.Stop()
         $statusCode = $_.Exception.Response.StatusCode.value__
         $errorMessage = $_.Exception.Message
-        Write-ColorOutput "❌ $Name`: $statusCode - $errorMessage" "Red"
+        Write-ColorOutput "ERROR $Name - $statusCode - $errorMessage" "Red"
         return $null
     }
 }
 
 # Test Authentication Functions
 function Test-AuthFunctions {
-    Write-ColorOutput "`n🔐 Testing Authentication Functions..." "Cyan"
+    Write-ColorOutput "`nTesting Authentication Functions..." "Cyan"
     
     # Health Check
     Test-Endpoint "Health Check" "GET" "$BaseUrl/api/health"
@@ -250,7 +250,7 @@ function Test-AuthFunctions {
 
 # Test Tournament Functions
 function Test-TournamentFunctions {
-    Write-ColorOutput "`n🏆 Testing Tournament Functions..." "Cyan"
+    Write-ColorOutput "`nTesting Tournament Functions..." "Cyan"
     
     # Get All Tournaments
     Test-Endpoint "Get All Tournaments" "GET" "$BaseUrl/api/tournaments"
@@ -267,7 +267,7 @@ function Test-TournamentFunctions {
 
 # Test News Functions
 function Test-NewsFunctions {
-    Write-ColorOutput "`n📰 Testing News Functions..." "Cyan"
+    Write-ColorOutput "`nTesting News Functions..." "Cyan"
     
     # Get All News
     Test-Endpoint "Get All News" "GET" "$BaseUrl/api/news"
@@ -284,7 +284,7 @@ function Test-NewsFunctions {
 
 # Test Match Functions
 function Test-MatchFunctions {
-    Write-ColorOutput "`n⚽ Testing Match Functions..." "Cyan"
+    Write-ColorOutput "`nTesting Match Functions..." "Cyan"
     
     # Get All Matches
     Test-Endpoint "Get All Matches" "GET" "$BaseUrl/api/matches"
@@ -304,7 +304,7 @@ function Test-MatchFunctions {
 
 # Test Highlight Functions
 function Test-HighlightFunctions {
-    Write-ColorOutput "`n🎬 Testing Highlight Functions..." "Cyan"
+    Write-ColorOutput "`nTesting Highlight Functions..." "Cyan"
     
     # Get All Highlights
     Test-Endpoint "Get All Highlights" "GET" "$BaseUrl/api/highlights"
@@ -324,7 +324,7 @@ function Test-HighlightFunctions {
 
 # Test User Functions
 function Test-UserFunctions {
-    Write-ColorOutput "`n👤 Testing User Functions..." "Cyan"
+    Write-ColorOutput "`nTesting User Functions..." "Cyan"
     
     # Get All Users (Admin only)
     Test-Endpoint "Get All Users" "GET" "$BaseUrl/api/users"
@@ -338,7 +338,7 @@ function Test-UserFunctions {
 
 # Test Admin Functions
 function Test-AdminFunctions {
-    Write-ColorOutput "`n👑 Testing Admin Functions..." "Cyan"
+    Write-ColorOutput "`nTesting Admin Functions..." "Cyan"
     
     # System Statistics
     Test-Endpoint "Get System Stats" "GET" "$BaseUrl/api/admin/stats"
@@ -360,7 +360,7 @@ function Test-AdminFunctions {
 }
 
 # Main execution
-Write-ColorOutput "🚀 Starting PowerShell Backend Testing..." "Cyan"
+Write-ColorOutput "Starting PowerShell Backend Testing..." "Cyan"
 Write-ColorOutput "Base URL: $BaseUrl" "Yellow"
 
 # Test all functions
@@ -372,5 +372,5 @@ Test-HighlightFunctions
 Test-UserFunctions
 Test-AdminFunctions
 
-Write-ColorOutput "`n🎉 PowerShell Testing Completed!" "Green"
+Write-ColorOutput "`nPowerShell Testing Completed!" "Green"
 Write-ColorOutput "Check the results above for any errors." "Yellow"
