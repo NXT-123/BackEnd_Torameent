@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { generateToken, generateRefreshToken } = require('../utils/jwt');
+const jwt = require('jsonwebtoken');
+const config = require('../config/config');
 
 class AuthController {
     // Register new user
@@ -13,6 +15,23 @@ class AuthController {
                 return res.status(400).json({
                     success: false,
                     message: 'Email, full name, and password are required'
+                });
+            }
+
+            // In mock mode, return a fake user and tokens without DB
+            if (global.mockMode) {
+                const fakeUser = {
+                    _id: '000000000000000000000001',
+                    email,
+                    fullName,
+                    role
+                };
+                const token = jwt.sign({ id: fakeUser._id, role: fakeUser.role, email: fakeUser.email }, config.jwtSecret, { expiresIn: config.jwtExpire });
+                const refreshToken = jwt.sign({ id: fakeUser._id, type: 'refresh' }, config.jwtSecret, { expiresIn: '30d' });
+                return res.status(201).json({
+                    success: true,
+                    message: 'User registered successfully',
+                    data: { user: fakeUser, token, refreshToken }
                 });
             }
 
@@ -85,6 +104,26 @@ class AuthController {
                 });
             }
 
+            // Mock mode: accept known test accounts
+            if (global.mockMode) {
+                const accounts = {
+                    'admin@esport.com': { role: 'admin', password: 'admin123', id: '00000000000000000000a001' },
+                    'organizer@esport.com': { role: 'organizer', password: 'organizer123', id: '00000000000000000000o001' },
+                    'testuser@esport.com': { role: 'user', password: 'password123', id: '00000000000000000000u001' }
+                };
+                const acct = accounts[email];
+                if (!acct || acct.password !== password) {
+                    return res.status(401).json({ success: false, message: 'Invalid credentials' });
+                }
+                const token = jwt.sign({ id: acct.id, role: acct.role, email }, config.jwtSecret, { expiresIn: config.jwtExpire });
+                const refreshToken = jwt.sign({ id: acct.id, type: 'refresh' }, config.jwtSecret, { expiresIn: '30d' });
+                return res.json({
+                    success: true,
+                    message: 'Login successful',
+                    data: { user: { _id: acct.id, email, role: acct.role }, token, refreshToken }
+                });
+            }
+
             // Find user and include passwordHash for comparison
             const user = await User.findOne({ email });
             if (!user) {
@@ -102,8 +141,6 @@ class AuthController {
                     message: 'Invalid credentials'
                 });
             }
-
-            // Update last login: field not present in schema; skip to keep schema alignment
 
             // Generate tokens
             const token = generateToken(user._id);
@@ -252,7 +289,6 @@ class AuthController {
     // Logout (in a stateless JWT system, this is mainly for client-side)
     static async logout(req, res) {
         try {
-            // In a more sophisticated system, you might want to blacklist the token
             res.json({
                 success: true,
                 message: 'Logged out successfully'

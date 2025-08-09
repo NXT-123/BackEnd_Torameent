@@ -5,6 +5,11 @@ param(
     [string]$BaseUrl = "http://localhost:3000"
 )
 
+# Store tokens for reuse
+$script:userToken = $null
+$script:adminToken = $null
+$script:organizerToken = $null
+
 # Color output function
 function Write-ColorOutput {
     param(
@@ -242,7 +247,10 @@ function Test-AuthFunctions {
         password = "password123"
     } | ConvertTo-Json
     
-    Test-Endpoint "User Login" "POST" "$BaseUrl/api/auth/login" $loginData
+    $userLoginResponse = Test-EndpointDetailed "User Login" "POST" "$BaseUrl/api/auth/login" $loginData -ShowDetails:$false
+    if ($userLoginResponse -and $userLoginResponse.data -and $userLoginResponse.data.token) {
+        $script:userToken = $userLoginResponse.data.token
+    }
     
     # Admin Login
     $adminData = @{
@@ -250,7 +258,10 @@ function Test-AuthFunctions {
         password = "admin123"
     } | ConvertTo-Json
     
-    Test-Endpoint "Admin Login" "POST" "$BaseUrl/api/auth/login" $adminData
+    $adminLoginResponse = Test-EndpointDetailed "Admin Login" "POST" "$BaseUrl/api/auth/login" $adminData -ShowDetails:$false
+    if ($adminLoginResponse -and $adminLoginResponse.data -and $adminLoginResponse.data.token) {
+        $script:adminToken = $adminLoginResponse.data.token
+    }
     
     # Organizer Login
     $organizerData = @{
@@ -258,7 +269,10 @@ function Test-AuthFunctions {
         password = "organizer123"
     } | ConvertTo-Json
     
-    Test-Endpoint "Organizer Login" "POST" "$BaseUrl/api/auth/login" $organizerData
+    $organizerLoginResponse = Test-EndpointDetailed "Organizer Login" "POST" "$BaseUrl/api/auth/login" $organizerData -ShowDetails:$false
+    if ($organizerLoginResponse -and $organizerLoginResponse.data -and $organizerLoginResponse.data.token) {
+        $script:organizerToken = $organizerLoginResponse.data.token
+    }
 }
 
 # Test Tournament Functions
@@ -339,37 +353,43 @@ function Test-HighlightFunctions {
 function Test-UserFunctions {
     Write-ColorOutput "`nTesting User Functions..." "Cyan"
     
+    $headers = @{}
+    if ($script:adminToken) { $headers = @{ Authorization = "Bearer $script:adminToken" } }
+    
     # Get All Users (Admin only)
-    Test-Endpoint "Get All Users" "GET" "$BaseUrl/api/users"
+    Test-Endpoint "Get All Users" "GET" "$BaseUrl/api/users" $null $headers
     
     # Get Users by Role
-    Test-Endpoint "Get Users by Role" "GET" "$BaseUrl/api/users/role/user"
+    Test-Endpoint "Get Users by Role" "GET" "$BaseUrl/api/users/role/user" $null $headers
     
     # Search Users
-    Test-Endpoint "Search Users" "GET" "$BaseUrl/api/users/search?q=test"
+    Test-Endpoint "Search Users" "GET" "$BaseUrl/api/users/search?q=test" $null $headers
 }
 
 # Test Admin Functions
 function Test-AdminFunctions {
     Write-ColorOutput "`nTesting Admin Functions..." "Cyan"
     
+    $headers = @{}
+    if ($script:adminToken) { $headers = @{ Authorization = "Bearer $script:adminToken" } }
+    
     # System Statistics
-    Test-Endpoint "Get System Stats" "GET" "$BaseUrl/api/admin/stats"
+    Test-Endpoint "Get System Stats" "GET" "$BaseUrl/api/admin/stats" $null $headers
     
     # User Management
-    Test-Endpoint "Get User Management" "GET" "$BaseUrl/api/admin/users"
+    Test-Endpoint "Get User Management" "GET" "$BaseUrl/api/admin/users" $null $headers
     
     # Tournament Management
-    Test-Endpoint "Get Tournament Management" "GET" "$BaseUrl/api/admin/tournaments"
+    Test-Endpoint "Get Tournament Management" "GET" "$BaseUrl/api/admin/tournaments" $null $headers
     
     # News Management
-    Test-Endpoint "Get News Management" "GET" "$BaseUrl/api/admin/news"
+    Test-Endpoint "Get News Management" "GET" "$BaseUrl/api/admin/news" $null $headers
     
     # Match Management
-    Test-Endpoint "Get Match Management" "GET" "$BaseUrl/api/admin/matches"
+    Test-Endpoint "Get Match Management" "GET" "$BaseUrl/api/admin/matches" $null $headers
     
     # Highlight Management
-    Test-Endpoint "Get Highlight Management" "GET" "$BaseUrl/api/admin/highlights"
+    Test-Endpoint "Get Highlight Management" "GET" "$BaseUrl/api/admin/highlights" $null $headers
 }
 
 # Main execution

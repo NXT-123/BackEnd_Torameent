@@ -9,11 +9,11 @@ router.use(authorize('admin'));
 
 // User management routes
 router.get('/', UserController.getAllUsers);
-router.get('/:id', UserController.getUserById);
-router.get('/role/:role', UserController.getUsersByRole);
 router.get('/search', UserController.searchUsers);
+router.get('/role/:role', UserController.getUsersByRole);
 router.get('/stats', UserController.getUserStats);
 router.get('/activity', UserController.getUserActivity);
+router.get('/:id', UserController.getUserById);
 
 // User modification routes
 router.put('/:id/role', UserController.updateUserRole);
