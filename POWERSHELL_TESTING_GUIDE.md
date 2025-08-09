@@ -833,54 +833,6 @@ while ($true) {
 
 ### Common Issues và Solutions
 
-#### 0. PowerShell Output Hiển Thị Object Thay Vì Data Thực Tế
-
-**Vấn đề:** Khi chạy `Invoke-RestMethod`, output hiển thị dạng `@{matches=System.Object[]; pagination=}` thay vì dữ liệu thực tế.
-
-**Nguyên nhân:** PowerShell hiển thị metadata của object thay vì nội dung thực sự.
-
-**Giải pháp:**
-
-```powershell
-# ❌ Cách sai - sẽ hiển thị object metadata
-$response = Invoke-RestMethod -Uri "http://localhost:3000/api/tournaments" -Method GET
-$response  # Chỉ hiển thị: @{tournaments=System.Object[]; pagination=}
-
-# ✅ Cách đúng - hiển thị data thực tế
-$response = Invoke-RestMethod -Uri "http://localhost:3000/api/tournaments" -Method GET
-
-# Hiển thị toàn bộ response dạng JSON
-$response | ConvertTo-Json -Depth 3
-
-# Hiển thị chỉ data tournaments
-$response.tournaments | Format-Table -AutoSize
-
-# Hiển thị số lượng items
-Write-Host "Total tournaments: $($response.tournaments.Count)"
-
-# Hiển thị item đầu tiên
-$response.tournaments[0] | Format-List
-
-# Hiển thị properties cụ thể
-$response.tournaments | Select-Object name, game, status, startDate | Format-Table -AutoSize
-```
-
-**Script sửa lỗi tự động:**
-```powershell
-# Chạy script này để test và hiển thị data đúng cách
-.\fix-output.ps1
-
-# Hoặc sử dụng script chi tiết
-.\test-detailed.ps1 -TestType summary
-```
-
-**Tips để tránh lỗi này:**
-1. Luôn sử dụng `ConvertTo-Json` để xem toàn bộ response
-2. Sử dụng `Format-Table` và `Format-List` để hiển thị data
-3. Truy cập trực tiếp vào properties: `$response.tournaments`
-4. Kiểm tra type của response: `$response.GetType().Name`
-5. Sử dụng `Select-Object` để chọn properties cần thiết
-
 #### 1. Server Not Responding
 ```powershell
 # Kiểm tra server status

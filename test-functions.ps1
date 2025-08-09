@@ -21,54 +21,6 @@ function Write-ColorOutput {
     }
 }
 
-# Function to display detailed response data
-function Show-DetailedResponse {
-    param(
-        [object]$Response,
-        [string]$Title = "Response Details"
-    )
-    
-    Write-ColorOutput "`n📊 $Title" "Cyan"
-    Write-ColorOutput "=" * 50 "Cyan"
-    
-    if ($Response -eq $null) {
-        Write-ColorOutput "No data available" "Yellow"
-        return
-    }
-    
-    # Handle different response types
-    if ($Response.GetType().Name -eq "PSCustomObject") {
-        $properties = $Response | Get-Member -MemberType Properties | Select-Object -ExpandProperty Name
-        
-        foreach ($prop in $properties) {
-            $value = $Response.$prop
-            
-            if ($value -eq $null) {
-                Write-ColorOutput "$prop`: null" "Gray"
-            } elseif ($value.GetType().IsArray) {
-                Write-ColorOutput "$prop`: Array with $($value.Count) items" "Yellow"
-                if ($value.Count -gt 0 -and $value.Count -le 3) {
-                    for ($i = 0; $i -lt $value.Count; $i++) {
-                        Write-ColorOutput "  [$i]: $($value[$i] | ConvertTo-Json -Compress -Depth 1)" "White"
-                    }
-                } elseif ($value.Count -gt 3) {
-                    Write-ColorOutput "  [0]: $($value[0] | ConvertTo-Json -Compress -Depth 1)" "White"
-                    Write-ColorOutput "  ... and $($value.Count - 1) more items" "Gray"
-                }
-            } elseif ($value.GetType().Name -eq "PSCustomObject") {
-                Write-ColorOutput "$prop`: Object" "Yellow"
-                Write-ColorOutput "  $($value | ConvertTo-Json -Compress -Depth 1)" "White"
-            } else {
-                Write-ColorOutput "$prop`: $value" "White"
-            }
-        }
-    } else {
-        Write-ColorOutput "Raw Data: $($Response | ConvertTo-Json -Depth 2)" "White"
-    }
-    
-    Write-ColorOutput "=" * 50 "Cyan"
-}
-
 # Test endpoint function
 function Test-Endpoint {
     param(
@@ -95,50 +47,7 @@ function Test-Endpoint {
         
         Write-ColorOutput "✅ $Name`: Success" "Green"
         if ($response) {
-            # Display response data properly
-            if ($response.GetType().Name -eq "PSCustomObject" -or $response.GetType().Name -eq "Hashtable") {
-                Write-ColorOutput "   Response Data:" "Cyan"
-                
-                # For objects with common API response structure
-                if ($response.data) {
-                    Write-ColorOutput "   Data: $($response.data | ConvertTo-Json -Depth 3 -Compress)" "White"
-                } elseif ($response.tournaments) {
-                    Write-ColorOutput "   Tournaments Count: $($response.tournaments.Count)" "Yellow"
-                    if ($response.tournaments.Count -gt 0) {
-                        Write-ColorOutput "   First Tournament: $($response.tournaments[0].name)" "White"
-                    }
-                } elseif ($response.news) {
-                    Write-ColorOutput "   News Count: $($response.news.Count)" "Yellow"
-                    if ($response.news.Count -gt 0) {
-                        Write-ColorOutput "   First News: $($response.news[0].title)" "White"
-                    }
-                } elseif ($response.matches) {
-                    Write-ColorOutput "   Matches Count: $($response.matches.Count)" "Yellow"
-                    if ($response.matches.Count -gt 0) {
-                        Write-ColorOutput "   First Match: $($response.matches[0].teamA) vs $($response.matches[0].teamB)" "White"
-                    }
-                } elseif ($response.highlights) {
-                    Write-ColorOutput "   Highlights Count: $($response.highlights.Count)" "Yellow"
-                    if ($response.highlights.Count -gt 0) {
-                        Write-ColorOutput "   First Highlight: $($response.highlights[0].title)" "White"
-                    }
-                } elseif ($response.users) {
-                    Write-ColorOutput "   Users Count: $($response.users.Count)" "Yellow"
-                    if ($response.users.Count -gt 0) {
-                        Write-ColorOutput "   First User: $($response.users[0].email)" "White"
-                    }
-                } else {
-                    # For simple responses or other structures
-                    Write-ColorOutput "   Raw Response: $($response | ConvertTo-Json -Depth 2 -Compress)" "White"
-                }
-                
-                # Show pagination info if available
-                if ($response.pagination) {
-                    Write-ColorOutput "   Pagination: Page $($response.pagination.page)/$($response.pagination.pages), Total: $($response.pagination.total)" "Yellow"
-                }
-            } else {
-                Write-ColorOutput "   Response: $($response | ConvertTo-Json -Depth 2 -Compress)" "White"
-            }
+            Write-ColorOutput "   Response: $($response | ConvertTo-Json -Depth 2)" "Cyan"
         }
         return $true
     }
@@ -147,62 +56,6 @@ function Test-Endpoint {
         $errorMessage = $_.Exception.Message
         Write-ColorOutput "❌ $Name`: $statusCode - $errorMessage" "Red"
         return $false
-    }
-}
-
-# Enhanced test endpoint function with detailed display
-function Test-EndpointDetailed {
-    param(
-        [string]$Name,
-        [string]$Method,
-        [string]$Url,
-        [string]$Body = $null,
-        [hashtable]$Headers = @{},
-        [switch]$ShowDetails
-    )
-    
-    try {
-        $params = @{
-            Uri = $Url
-            Method = $Method
-            Headers = $Headers
-        }
-        
-        if ($Body) {
-            $params.Body = $Body
-            $params.ContentType = "application/json"
-        }
-        
-        $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-        $response = Invoke-RestMethod @params -ErrorAction Stop
-        $stopwatch.Stop()
-        
-        Write-ColorOutput "✅ $Name`: Success ($($stopwatch.ElapsedMilliseconds)ms)" "Green"
-        
-        if ($response -and $ShowDetails) {
-            Show-DetailedResponse -Response $response -Title "$Name Response"
-        } elseif ($response) {
-            # Quick summary
-            if ($response.GetType().Name -eq "PSCustomObject") {
-                $properties = $response | Get-Member -MemberType Properties | Select-Object -ExpandProperty Name
-                Write-ColorOutput "   Properties: $($properties -join ', ')" "Cyan"
-                
-                # Show key data counts
-                foreach ($prop in @('tournaments', 'news', 'matches', 'highlights', 'users')) {
-                    if ($response.$prop) {
-                        Write-ColorOutput "   $prop Count: $($response.$prop.Count)" "Yellow"
-                    }
-                }
-            }
-        }
-        return $response
-    }
-    catch {
-        $stopwatch.Stop()
-        $statusCode = $_.Exception.Response.StatusCode.value__
-        $errorMessage = $_.Exception.Message
-        Write-ColorOutput "❌ $Name`: $statusCode - $errorMessage" "Red"
-        return $null
     }
 }
 
