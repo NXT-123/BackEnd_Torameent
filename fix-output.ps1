@@ -12,11 +12,11 @@ function Show-ApiData {
         [string]$EndpointName
     )
     
-    Write-Host "`n🔍 $EndpointName" -ForegroundColor Cyan
+    Write-Host "`nTesting: $EndpointName" -ForegroundColor Cyan
     Write-Host "=" * 50 -ForegroundColor Cyan
     
     if ($Response -eq $null) {
-        Write-Host "❌ Không có dữ liệu" -ForegroundColor Red
+        Write-Host "No data available" -ForegroundColor Red
         return
     }
     
@@ -57,7 +57,7 @@ function Show-ApiData {
                         }
                     }
                     if ($value.Count -gt 3) {
-                        Write-Host "    ... và $($value.Count - 3) items khác" -ForegroundColor Gray
+                        Write-Host "    ... and $($value.Count - 3) more items" -ForegroundColor Gray
                     }
                 }
             } elseif ($value.GetType().Name -eq "PSCustomObject") {
@@ -85,25 +85,25 @@ function Test-ApiEndpoint {
     )
     
     try {
-        Write-Host "`n🚀 Testing: $Name" -ForegroundColor Green
+        Write-Host "`nTesting: $Name" -ForegroundColor Green
         Write-Host "URL: $Url" -ForegroundColor Gray
         
         $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
         $response = Invoke-RestMethod -Uri $Url -Method GET
         $stopwatch.Stop()
         
-        Write-Host "✅ Success! ($($stopwatch.ElapsedMilliseconds)ms)" -ForegroundColor Green
+        Write-Host "Success! ($($stopwatch.ElapsedMilliseconds)ms)" -ForegroundColor Green
         
         # Hiển thị data đúng cách
         Show-ApiData -Response $response -EndpointName $Name
         
     } catch {
-        Write-Host "❌ Error: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
 
 # Test các endpoints
-Write-Host "🔧 Sửa lỗi hiển thị output PowerShell" -ForegroundColor Cyan
+Write-Host "Fix PowerShell Output Display Issues" -ForegroundColor Cyan
 Write-Host "Base URL: $BaseUrl" -ForegroundColor Yellow
 
 # Test Health Check
@@ -121,5 +121,5 @@ Test-ApiEndpoint -Name "Matches" -Url "$BaseUrl/api/matches"
 # Test Highlights
 Test-ApiEndpoint -Name "Highlights" -Url "$BaseUrl/api/highlights"
 
-Write-Host "`n🎉 Hoàn thành! Output hiện tại đã hiển thị data thực tế thay vì object metadata." -ForegroundColor Green
-Write-Host "💡 Tip: Sử dụng script này làm template để test các API khác" -ForegroundColor Yellow
+Write-Host "`nCompleted! Output now shows actual data instead of object metadata." -ForegroundColor Green
+Write-Host "Tip: Use this script as a template to test other APIs" -ForegroundColor Yellow
