@@ -1,0 +1,112 @@
+nohup: ignoring input
+(node:8210) [MONGODB DRIVER] Warning: useNewUrlParser is a deprecated option: useNewUrlParser has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:8210) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
+🚀 Tournament Management System Server running on http://localhost:3000
+📊 Environment: development
+📚 API Documentation: http://localhost:3000/api
+🏥 Health Check: http://localhost:3000/api/health
+MongoDB connection failed, running in mock mode: connect ECONNREFUSED ::1:27017, connect ECONNREFUSED 127.0.0.1:27017
+Server will run with mock data responses.
+Mock mode flag set: true
+Server running in mock mode
+Mock mode status: true
+Global object keys: [
+  'global',          'clearImmediate',
+  'setImmediate',    'clearInterval',
+  'clearTimeout',    'setInterval',
+  'setTimeout',      'queueMicrotask',
+  'structuredClone', 'atob',
+  'btoa',            'performance',
+  'fetch',           'navigator',
+  'crypto',          'mockMode'
+]
+Attempting to use mock mode for login...
+Using mock mode for authentication
+Mock user found: Yes
+Checking password for: admin@esport.com
+Password verified, generating token...
+Token generated successfully
+Mock mode status: true
+Global object keys: [
+  'global',          'clearImmediate',
+  'setImmediate',    'clearInterval',
+  'clearTimeout',    'setInterval',
+  'setTimeout',      'queueMicrotask',
+  'structuredClone', 'atob',
+  'btoa',            'performance',
+  'fetch',           'navigator',
+  'crypto',          'mockMode',
+  'mockUsers'
+]
+Attempting to use mock mode for login...
+Using mock mode for authentication
+Mock user found: Yes
+Checking password for: testuser@esport.com
+Password verified, generating token...
+Token generated successfully
+Mock mode status: true
+Global object keys: [
+  'global',          'clearImmediate',
+  'setImmediate',    'clearInterval',
+  'clearTimeout',    'setInterval',
+  'setTimeout',      'queueMicrotask',
+  'structuredClone', 'atob',
+  'btoa',            'performance',
+  'fetch',           'navigator',
+  'crypto',          'mockMode',
+  'mockUsers'
+]
+Attempting to use mock mode for login...
+Using mock mode for authentication
+Mock user found: Yes
+Checking password for: admin@esport.com
+Password verified, generating token...
+Token generated successfully
+Mock mode status: true
+Global object keys: [
+  'global',          'clearImmediate',
+  'setImmediate',    'clearInterval',
+  'clearTimeout',    'setInterval',
+  'setTimeout',      'queueMicrotask',
+  'structuredClone', 'atob',
+  'btoa',            'performance',
+  'fetch',           'navigator',
+  'crypto',          'mockMode',
+  'mockUsers'
+]
+Attempting to use mock mode for login...
+Using mock mode for authentication
+Mock user found: Yes
+Checking password for: organizer@esport.com
+Password verified, generating token...
+Token generated successfully
+Get profile error: CastError: Cast to ObjectId failed for value "mock_1754766259156" (type string) at path "_id" for model "User"
+    at SchemaObjectId.cast (/workspace/node_modules/mongoose/lib/schema/objectId.js:251:11)
+    at SchemaType.applySetters (/workspace/node_modules/mongoose/lib/schemaType.js:1258:12)
+    at SchemaType.castForQuery (/workspace/node_modules/mongoose/lib/schemaType.js:1680:17)
+    at cast (/workspace/node_modules/mongoose/lib/cast.js:390:32)
+    at Query.cast (/workspace/node_modules/mongoose/lib/query.js:5055:12)
+    at Query._castConditions (/workspace/node_modules/mongoose/lib/query.js:2351:10)
+    at model.Query._findOne (/workspace/node_modules/mongoose/lib/query.js:2674:8)
+    at model.Query.exec (/workspace/node_modules/mongoose/lib/query.js:4604:80)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async getProfile (/workspace/controllers/AuthController.js:229:26) {
+  stringValue: '"mock_1754766259156"',
+  messageFormat: undefined,
+  kind: 'ObjectId',
+  value: 'mock_1754766259156',
+  path: '_id',
+  reason: BSONError: input must be a 24 character hex string, 12 byte Uint8Array, or an integer
+      at new ObjectId (/workspace/node_modules/bson/lib/bson.cjs:2538:23)
+      at castObjectId (/workspace/node_modules/mongoose/lib/cast/objectid.js:25:12)
+      at SchemaObjectId.cast (/workspace/node_modules/mongoose/lib/schema/objectId.js:249:12)
+      at SchemaType.applySetters (/workspace/node_modules/mongoose/lib/schemaType.js:1258:12)
+      at SchemaType.castForQuery (/workspace/node_modules/mongoose/lib/schemaType.js:1680:17)
+      at cast (/workspace/node_modules/mongoose/lib/cast.js:390:32)
+      at Query.cast (/workspace/node_modules/mongoose/lib/query.js:5055:12)
+      at Query._castConditions (/workspace/node_modules/mongoose/lib/query.js:2351:10)
+      at model.Query._findOne (/workspace/node_modules/mongoose/lib/query.js:2674:8)
+      at model.Query.exec (/workspace/node_modules/mongoose/lib/query.js:4604:80),
+  valueType: 'string'
+}

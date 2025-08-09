@@ -23,7 +23,22 @@ const authenticateToken = async (req, res, next) => {
         // Verify token
         const decoded = jwt.verify(token, config.jwtSecret);
 
-        // Get user from database
+        // Check if running in mock mode
+        if (global.mockMode) {
+            // In mock mode, look up the user from stored mock users
+            if (global.mockUsers && global.mockUsers.has(decoded.id)) {
+                const mockUser = global.mockUsers.get(decoded.id);
+                req.user = mockUser;
+                return next();
+            } else {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Invalid token. Mock user not found.'
+                });
+            }
+        }
+
+        // Get user from database (normal mode)
         const user = await User.findById(decoded.id).select('-passwordHash');
         if (!user) {
             return res.status(401).json({

@@ -3,11 +3,13 @@ require('dotenv').config();
 
 const connectDB = async () => {
     try {
-        // Try to connect to MongoDB
+        // Force quick failure for MongoDB connection
         const conn = await mongoose.connect(process.env.MONGODB_URI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
-            serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+            serverSelectionTimeoutMS: 1000, // Reduced timeout to 1 second
+            connectTimeoutMS: 1000, // Connection timeout
+            socketTimeoutMS: 1000, // Socket timeout
         });
         console.log(`MongoDB Connected: ${conn.connection.host}`);
         return true;
@@ -17,6 +19,7 @@ const connectDB = async () => {
         
         // Set a flag to indicate we're running in mock mode
         global.mockMode = true;
+        console.log('Mock mode flag set:', global.mockMode);
         return false;
     }
 };
