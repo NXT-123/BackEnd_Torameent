@@ -13,6 +13,8 @@ const tournamentRoutes = require('./routes/tournamentRoutes');
 const newsRoutes = require('./routes/newsRoutes');
 const matchRoutes = require('./routes/matchRoutes');
 const highlightRoutes = require('./routes/highlightRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 const port = config.port;
@@ -35,6 +37,8 @@ app.use('/api/tournaments', tournamentRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/highlights', highlightRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/users', userRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -47,7 +51,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // API Documentation endpoint
-app.get('/api', (req, res) => {
+app.get('/api/docs', (req, res) => {
     res.json({
         success: true,
         message: 'Tournament Management System API',

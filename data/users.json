@@ -1,14 +1,14 @@
 [
     {
         "email": "admin@esport.com",
-        "passwordHash": "$2a$10$1.irdkM3Zp0mKcRUYDLpiefdYOu1ikbwsx6GE94RCRfZrOLS54X5y",
+        "passwordHash": "$2a$10$tyldA1fYu239LTxE7PaJNOfTlnbscghKOJanMjN0rOkKIx1BylLfW",
         "role": "admin",
         "fullName": "Nguyễn Văn Admin",
         "avatarUrl": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
     },
     {
         "email": "organizer@esport.com",
-        "passwordHash": "$2a$10$z3SK.Jlb6ei.RROff.mWnOtco7f4CeDe6uBtvUnQ7loaYyXqIEhji",
+        "passwordHash": "$2a$10$7jfv9DHXirN6fTshAYyabOjgkFbi4e71sv/b8bLsyj.CezeYgGkDq",
         "role": "organizer",
         "fullName": "Trần Thị Organizer",
         "avatarUrl": "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
@@ -71,7 +71,7 @@
     },
     {
         "email": "testuser@esport.com",
-        "passwordHash": "$2a$10$zTT4lGx4hvp3XEGsv4d6zOE7av9HcyBwRing4iZzazSwyzZFrJb7e",
+        "passwordHash": "$2a$10$emk9Dr4dzMck8W/S5zIALOfOkDxrGMjTkm.BUMSq4wIjdTZUSU2xe",
         "role": "user",
         "fullName": "Test User",
         "avatarUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"

@@ -397,6 +397,155 @@ class NewsController {
             });
         }
     }
+
+    // Get news by category
+    static async getNewsByCategory(req, res) {
+        try {
+            const { category } = req.params;
+            
+            res.json({
+                success: true,
+                message: `News for category '${category}'`,
+                data: {
+                    news: [
+                        {
+                            _id: "507f1f77bcf86cd799439011",
+                            title: `${category.charAt(0).toUpperCase() + category.slice(1)} News Update`,
+                            content: `Latest news in the ${category} category.`,
+                            category: category,
+                            tags: [category, "update"],
+                            status: "published",
+                            publishedAt: new Date().toISOString(),
+                            authorId: "507f1f77bcf86cd799439012"
+                        }
+                    ],
+                    total: 1,
+                    category: category
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error getting news by category',
+                error: error.message
+            });
+        }
+    }
+
+    // Get news by tag
+    static async getNewsByTag(req, res) {
+        try {
+            const { tag } = req.params;
+            
+            res.json({
+                success: true,
+                message: `News with tag '${tag}'`,
+                data: {
+                    news: [
+                        {
+                            _id: "507f1f77bcf86cd799439011",
+                            title: `News tagged with ${tag}`,
+                            content: `This news article is tagged with ${tag}.`,
+                            category: "general",
+                            tags: [tag, "news"],
+                            status: "published",
+                            publishedAt: new Date().toISOString(),
+                            authorId: "507f1f77bcf86cd799439012"
+                        }
+                    ],
+                    total: 1,
+                    tag: tag
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error getting news by tag',
+                error: error.message
+            });
+        }
+    }
+
+    // Get published news
+    static async getPublishedNews(req, res) {
+        try {
+            res.json({
+                success: true,
+                message: "Published news retrieved successfully",
+                data: {
+                    news: [
+                        {
+                            _id: "507f1f77bcf86cd799439011",
+                            title: "Tournament Championship Begins",
+                            content: "The annual championship tournament has officially started.",
+                            category: "tournament",
+                            tags: ["tournament", "championship"],
+                            status: "published",
+                            publishedAt: new Date().toISOString(),
+                            authorId: "507f1f77bcf86cd799439012"
+                        },
+                        {
+                            _id: "507f1f77bcf86cd799439012",
+                            title: "New Game Added",
+                            content: "We've added a new game to our tournament lineup.",
+                            category: "announcement",
+                            tags: ["game", "announcement"],
+                            status: "published",
+                            publishedAt: new Date(Date.now() - 3600000).toISOString(),
+                            authorId: "507f1f77bcf86cd799439012"
+                        }
+                    ],
+                    total: 2
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error getting published news',
+                error: error.message
+            });
+        }
+    }
+
+    // Get news statistics
+    static async getNewsStats(req, res) {
+        try {
+            res.json({
+                success: true,
+                message: "News statistics",
+                data: {
+                    total_news: 95,
+                    published_news: 85,
+                    draft_news: 10,
+                    categories: {
+                        tournament: 35,
+                        announcement: 25,
+                        general: 20,
+                        esport: 15
+                    },
+                    popular_tags: {
+                        tournament: 40,
+                        championship: 25,
+                        announcement: 20,
+                        valorant: 15,
+                        lol: 10
+                    },
+                    views: {
+                        total: 12500,
+                        this_month: 3200,
+                        this_week: 850
+                    },
+                    engagement_rate: 75.5
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: 'Error getting news statistics',
+                error: error.message
+            });
+        }
+    }
 }
 
 module.exports = NewsController;
