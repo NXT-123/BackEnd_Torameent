@@ -8,16 +8,49 @@ class TournamentController {
         try {
             const { name, format, description, gameName, startDate, endDate, maxPlayers, avatarUrl } = req.body;
 
+            // Validate required fields
+            if (!name || name.trim() === '') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Tournament name is required'
+                });
+            }
+
+            // Validate dates
+            if (startDate && endDate && new Date(startDate) >= new Date(endDate)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'End date must be after start date'
+                });
+            }
+
+            if (startDate && new Date(startDate) <= new Date()) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Start date must be in the future'
+                });
+            }
+
+            // Validate maxPlayers
+            if (maxPlayers && maxPlayers < 1) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Maximum players must be at least 1'
+                });
+            }
+
             const tournament = new Tournament({
-                name,
-                format,
-                description,
-                gameName,
+                name: name.trim(),
+                format: format ? format.trim() : undefined,
+                description: description ? description.trim() : undefined,
+                gameName: gameName ? gameName.trim() : undefined,
                 organizerId: req.user._id,
                 startDate: startDate ? new Date(startDate) : undefined,
                 endDate: endDate ? new Date(endDate) : undefined,
-                maxPlayers,
-                avatarUrl
+                maxPlayers: maxPlayers || undefined,
+                avatarUrl: avatarUrl ? avatarUrl.trim() : undefined,
+                numberOfPlayers: 0,
+                status: 'upcoming'
             });
 
             await tournament.save();
@@ -44,7 +77,8 @@ class TournamentController {
 
             res.status(500).json({
                 success: false,
-                message: 'Server error while creating tournament'
+                message: 'Server error while creating tournament',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
             });
         }
     }
@@ -218,6 +252,14 @@ class TournamentController {
             const { id } = req.params;
             const { name, logoUrl, description, mail } = req.body;
 
+            // Validate tournament ID
+            if (!id || !require('mongoose').Types.ObjectId.isValid(id)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid tournament ID'
+                });
+            }
+
             const tournament = await Tournament.findById(id);
             if (!tournament) {
                 return res.status(404).json({
@@ -225,34 +267,98 @@ class TournamentController {
                     message: 'Tournament not found'
                 });
             }
+
+            // Check if tournament is open for registration
+            if (tournament.status !== 'upcoming') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Tournament is not open for registration'
+                });
+            }
+
+            // Check if tournament is full
+            if (tournament.maxPlayers && tournament.numberOfPlayers >= tournament.maxPlayers) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Tournament is full'
+                });
+            }
+
+            // Check if user is already registered
+            const existingCompetitor = await Competitor.findOne({
+                tournamentId: id,
+                userId: req.user._id
+            });
+
+            if (existingCompetitor) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'You are already registered for this tournament'
+                });
+            }
+
+            // Validate required fields
+            if (!name && !req.user.fullName) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Team name is required'
+                });
+            }
+
             // Create competitor and attach to tournament's competitor list
             const competitor = new Competitor({
-                name: name || req.user.fullName,
-                logoUrl,
-                description,
-                mail,
+                name: name || req.user.fullName || 'Unnamed Team',
+                logoUrl: logoUrl || null,
+                description: description || null,
+                mail: mail || req.user.email || null,
                 tournamentId: id,
                 userId: req.user._id
             });
 
             await competitor.save();
 
+            // Update tournament with new competitor
             const updated = await Tournament.findByIdAndUpdate(
                 id,
-                { $addToSet: { competitor: competitor._id }, $inc: { numberOfPlayers: 1 } },
+                {
+                    $addToSet: { competitor: competitor._id },
+                    $inc: { numberOfPlayers: 1 }
+                },
                 { new: true }
-            );
+            ).populate('competitor');
 
             res.status(201).json({
                 success: true,
                 message: 'Successfully registered for tournament',
-                data: { competitor, tournament: updated }
+                data: {
+                    competitor,
+                    tournament: updated
+                }
             });
         } catch (error) {
             console.error('Tournament registration error:', error);
+
+            // Handle specific MongoDB errors
+            if (error.name === 'ValidationError') {
+                const errors = Object.values(error.errors).map(err => err.message);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Validation failed',
+                    errors
+                });
+            }
+
+            if (error.code === 11000) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Duplicate registration detected'
+                });
+            }
+
             res.status(500).json({
                 success: false,
-                message: 'Server error during tournament registration'
+                message: 'Server error during tournament registration',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
             });
         }
     }
@@ -261,13 +367,20 @@ class TournamentController {
     static async withdrawFromTournament(req, res) {
         try {
             const { id } = req.params;
-
             const { competitorId } = req.body;
 
-            if (!competitorId) {
+            // Validate tournament ID
+            if (!id || !require('mongoose').Types.ObjectId.isValid(id)) {
                 return res.status(400).json({
                     success: false,
-                    message: 'competitorId is required to withdraw'
+                    message: 'Invalid tournament ID'
+                });
+            }
+
+            if (!competitorId || !require('mongoose').Types.ObjectId.isValid(competitorId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Valid competitorId is required to withdraw'
                 });
             }
 
@@ -279,18 +392,76 @@ class TournamentController {
                 });
             }
 
-            await Tournament.findByIdAndUpdate(id, { $pull: { competitor: competitorId }, $inc: { numberOfPlayers: -1 } });
-            await Competitor.findByIdAndDelete(competitorId);
+            // Check if competitor exists and belongs to this tournament
+            const competitor = await Competitor.findById(competitorId);
+            if (!competitor) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Competitor not found'
+                });
+            }
 
-            res.json({
-                success: true,
-                message: 'Successfully withdrew from tournament'
-            });
+            if (competitor.tournamentId.toString() !== id) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Competitor does not belong to this tournament'
+                });
+            }
+
+            // Check if user owns this competitor or is admin
+            if (competitor.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+                return res.status(403).json({
+                    success: false,
+                    message: 'You can only withdraw your own registration'
+                });
+            }
+
+            // Use transaction to ensure data consistency
+            const session = await require('mongoose').startSession();
+            session.startTransaction();
+
+            try {
+                // Remove competitor from tournament
+                await Tournament.findByIdAndUpdate(
+                    id,
+                    {
+                        $pull: { competitor: competitorId },
+                        $inc: { numberOfPlayers: -1 }
+                    },
+                    { session }
+                );
+
+                // Delete competitor
+                await Competitor.findByIdAndDelete(competitorId, { session });
+
+                await session.commitTransaction();
+                session.endSession();
+
+                res.json({
+                    success: true,
+                    message: 'Successfully withdrew from tournament'
+                });
+            } catch (error) {
+                await session.abortTransaction();
+                session.endSession();
+                throw error;
+            }
         } catch (error) {
             console.error('Tournament withdrawal error:', error);
+
+            if (error.name === 'ValidationError') {
+                const errors = Object.values(error.errors).map(err => err.message);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Validation failed',
+                    errors
+                });
+            }
+
             res.status(500).json({
                 success: false,
-                message: 'Server error during tournament withdrawal'
+                message: 'Server error during tournament withdrawal',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
             });
         }
     }
@@ -300,18 +471,59 @@ class TournamentController {
         try {
             const { id } = req.params;
 
-            const tournament = await Tournament.findById(id).populate('competitor');
-            const competitors = tournament ? tournament.competitor : [];
+            // Validate tournament ID
+            if (!id || !require('mongoose').Types.ObjectId.isValid(id)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid tournament ID'
+                });
+            }
+
+            const tournament = await Tournament.findById(id).populate({
+                path: 'competitor',
+                populate: {
+                    path: 'userId',
+                    select: 'fullName email avatarUrl'
+                }
+            });
+
+            if (!tournament) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Tournament not found'
+                });
+            }
+
+            const competitors = tournament.competitor || [];
 
             res.json({
                 success: true,
-                data: { competitors }
+                data: {
+                    competitors,
+                    total: competitors.length,
+                    tournament: {
+                        id: tournament._id,
+                        name: tournament.name,
+                        status: tournament.status,
+                        numberOfPlayers: tournament.numberOfPlayers,
+                        maxPlayers: tournament.maxPlayers
+                    }
+                }
             });
         } catch (error) {
             console.error('Get participants error:', error);
+
+            if (error.name === 'CastError') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid tournament ID format'
+                });
+            }
+
             res.status(500).json({
                 success: false,
-                message: 'Server error while fetching participants'
+                message: 'Server error while fetching participants',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
             });
         }
     }
