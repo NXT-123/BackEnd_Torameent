@@ -5,6 +5,11 @@ param(
     [string]$BaseUrl = "http://localhost:3000"
 )
 
+# Global variables to store authentication tokens
+$script:userToken = $null
+$script:adminToken = $null
+$script:organizerToken = $null
+
 # Color output function
 function Write-ColorOutput {
     param(
@@ -219,7 +224,7 @@ function Test-EndpointDetailed {
     }
 }
 
-# Test Authentication Functions
+# Test Authentication Functions and store tokens
 function Test-AuthFunctions {
     Write-ColorOutput "`nTesting Authentication Functions..." "Cyan"
     
@@ -242,7 +247,11 @@ function Test-AuthFunctions {
         password = "password123"
     } | ConvertTo-Json
     
-    Test-Endpoint "User Login" "POST" "$BaseUrl/api/auth/login" $loginData
+    $userResponse = Test-EndpointDetailed "User Login" "POST" "$BaseUrl/api/auth/login" $loginData
+    if ($userResponse -and $userResponse.token) {
+        $script:userToken = $userResponse.token
+        Write-ColorOutput "   User token stored successfully" "Green"
+    }
     
     # Admin Login
     $adminData = @{
@@ -250,7 +259,11 @@ function Test-AuthFunctions {
         password = "admin123"
     } | ConvertTo-Json
     
-    Test-Endpoint "Admin Login" "POST" "$BaseUrl/api/auth/login" $adminData
+    $adminResponse = Test-EndpointDetailed "Admin Login" "POST" "$BaseUrl/api/auth/login" $adminData
+    if ($adminResponse -and $adminResponse.token) {
+        $script:adminToken = $adminResponse.token
+        Write-ColorOutput "   Admin token stored successfully" "Green"
+    }
     
     # Organizer Login
     $organizerData = @{
@@ -258,7 +271,11 @@ function Test-AuthFunctions {
         password = "organizer123"
     } | ConvertTo-Json
     
-    Test-Endpoint "Organizer Login" "POST" "$BaseUrl/api/auth/login" $organizerData
+    $organizerResponse = Test-EndpointDetailed "Organizer Login" "POST" "$BaseUrl/api/auth/login" $organizerData
+    if ($organizerResponse -and $organizerResponse.token) {
+        $script:organizerToken = $organizerResponse.token
+        Write-ColorOutput "   Organizer token stored successfully" "Green"
+    }
 }
 
 # Test Tournament Functions
@@ -335,41 +352,59 @@ function Test-HighlightFunctions {
     Test-Endpoint "Search Highlights" "GET" "$BaseUrl/api/highlights/search?q=amazing"
 }
 
-# Test User Functions
+# Test User Functions with authentication
 function Test-UserFunctions {
     Write-ColorOutput "`nTesting User Functions..." "Cyan"
     
+    if (-not $script:adminToken) {
+        Write-ColorOutput "   Skipping User Functions - Admin token not available" "Yellow"
+        return
+    }
+    
+    $headers = @{
+        "Authorization" = "Bearer $($script:adminToken)"
+    }
+    
     # Get All Users (Admin only)
-    Test-Endpoint "Get All Users" "GET" "$BaseUrl/api/users"
+    Test-Endpoint "Get All Users" "GET" "$BaseUrl/api/users" -Headers $headers
     
     # Get Users by Role
-    Test-Endpoint "Get Users by Role" "GET" "$BaseUrl/api/users/role/user"
+    Test-Endpoint "Get Users by Role" "GET" "$BaseUrl/api/users/role/user" -Headers $headers
     
     # Search Users
-    Test-Endpoint "Search Users" "GET" "$BaseUrl/api/users/search?q=test"
+    Test-Endpoint "Search Users" "GET" "$BaseUrl/api/users/search?q=test" -Headers $headers
 }
 
-# Test Admin Functions
+# Test Admin Functions with authentication
 function Test-AdminFunctions {
     Write-ColorOutput "`nTesting Admin Functions..." "Cyan"
     
+    if (-not $script:adminToken) {
+        Write-ColorOutput "   Skipping Admin Functions - Admin token not available" "Yellow"
+        return
+    }
+    
+    $headers = @{
+        "Authorization" = "Bearer $($script:adminToken)"
+    }
+    
     # System Statistics
-    Test-Endpoint "Get System Stats" "GET" "$BaseUrl/api/admin/stats"
+    Test-Endpoint "Get System Stats" "GET" "$BaseUrl/api/admin/stats" -Headers $headers
     
     # User Management
-    Test-Endpoint "Get User Management" "GET" "$BaseUrl/api/admin/users"
+    Test-Endpoint "Get User Management" "GET" "$BaseUrl/api/admin/users" -Headers $headers
     
     # Tournament Management
-    Test-Endpoint "Get Tournament Management" "GET" "$BaseUrl/api/admin/tournaments"
+    Test-Endpoint "Get Tournament Management" "GET" "$BaseUrl/api/admin/tournaments" -Headers $headers
     
     # News Management
-    Test-Endpoint "Get News Management" "GET" "$BaseUrl/api/admin/news"
+    Test-Endpoint "Get News Management" "GET" "$BaseUrl/api/admin/news" -Headers $headers
     
     # Match Management
-    Test-Endpoint "Get Match Management" "GET" "$BaseUrl/api/admin/matches"
+    Test-Endpoint "Get Match Management" "GET" "$BaseUrl/api/admin/matches" -Headers $headers
     
     # Highlight Management
-    Test-Endpoint "Get Highlight Management" "GET" "$BaseUrl/api/admin/highlights"
+    Test-Endpoint "Get Highlight Management" "GET" "$BaseUrl/api/admin/highlights" -Headers $headers
 }
 
 # Main execution

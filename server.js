@@ -20,7 +20,19 @@ const app = express();
 const port = config.port;
 
 // Connect to MongoDB
-connectDB();
+(async () => {
+    try {
+        const connected = await connectDB();
+        if (connected) {
+            console.log('Server running with database connection');
+        } else {
+            console.log('Server running in mock mode');
+        }
+    } catch (error) {
+        console.error('Database connection error:', error);
+        console.log('Server running in mock mode');
+    }
+})();
 
 // Middleware
 app.use(cors());
