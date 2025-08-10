@@ -86,6 +86,62 @@ class TournamentController {
     // Get all tournaments with filtering and pagination
     static async getAllTournaments(req, res) {
         try {
+            // Check if running in mock mode
+            if (global.mockMode) {
+                // Return mock tournament data
+                const mockTournaments = [
+                    {
+                        _id: 'mock_tournament_1',
+                        name: 'Mock Tournament 1',
+                        format: 'Single Elimination',
+                        description: 'A mock tournament for testing',
+                        gameName: 'Mock Game',
+                        organizerId: {
+                            _id: 'mock_organizer_1',
+                            fullName: 'Mock Organizer',
+                            email: 'organizer@esport.com'
+                        },
+                        startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+                        endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+                        maxPlayers: 32,
+                        numberOfPlayers: 16,
+                        status: 'upcoming',
+                        avatarUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=200&fit=crop'
+                    },
+                    {
+                        _id: 'mock_tournament_2',
+                        name: 'Mock Tournament 2',
+                        format: 'Double Elimination',
+                        description: 'Another mock tournament for testing',
+                        gameName: 'Mock Game 2',
+                        organizerId: {
+                            _id: 'mock_organizer_2',
+                            fullName: 'Mock Organizer 2',
+                            email: 'organizer2@esport.com'
+                        },
+                        startDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+                        endDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from now
+                        maxPlayers: 16,
+                        numberOfPlayers: 8,
+                        status: 'upcoming',
+                        avatarUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=200&fit=crop'
+                    }
+                ];
+
+                res.json({
+                    success: true,
+                    data: {
+                        tournaments: mockTournaments,
+                        pagination: {
+                            current: 1,
+                            pages: 1,
+                            total: 2
+                        }
+                    }
+                });
+                return;
+            }
+
             const {
                 page = 1,
                 limit = 10,
